@@ -33,14 +33,85 @@ void yyerror(char* msg);
 
 
 %type <string> REF TYPE
-%type <tac> expression_statement declaration_statement statement statement_list
 %type <exp> expression_list expression call_expression
-
+%type <tac> expression_statement declaration_statement return_statement if_statement while_statement statement statement_list block
+%type<tac> class_declarations class_declaration member_declarations member_declaration function parameter parameter_list
+%type<tac> program
 %%
+
+program: class_declarations
+
+class_declarations:class_declaration
+|class_declarations class_declaration{
+	$$ = join_tac($1,$2);
+}
+
+class_declaration:CLASS IDENTIFIER '{' member_declarations '}'{
+	$$ = make_class($2,$4);
+
+}
+
+member_declarations:member_declaration
+|member_declarations member_declaration{
+	$$ = join_tac($1,$2);
+}
+
+member_declaration:declaration_statement
+|function;
+
+parameter:TYPE IDENTIFIER{
+	$$=make_param();
+}
+
+parameter_list:parameter|parameter_list ',' parameter{
+	$$=join_tac($1,$3);
+}
+
+function : IDENTIFIER '(' parameter_list ')' block
+{
+
+	$$=do_func(declare_func($1_, $3, $5);
+	scope_local=0; /* Leave local scope. */
+	sym_tab_local=NULL; /* Clear local symbol table. */
+}
+
+block:'{' statement_list '}'{
+ $$ = $2;
+}| '{' '}'{
+ $$ = NULL;
+}
+
 statement_list:statement| statement_list statement{
 	$$ = join_tac($1,$2);
 }
-statement:declaration_statement|expression_statement;
+
+statement:declaration_statement|expression_statement|return_statement|if_statement|while_statement;
+
+return_statement: RETURN expression_list ';'
+{
+TAC *t=mk_tac(TAC_RETURN, $2->ret, NULL, NULL);
+t->prev=$2->tac;
+$$=t;
+}
+;
+
+if_statement : IF '(' expression_list ')' block
+{
+$$=do_if($3, $5);
+}
+| IF '(' expression_list ')' block ELSE block
+{
+$$=do_test($3, $5, $7);
+}
+;
+
+while_statement : WHILE '(' expression_list ')' block
+{
+$$=do_while($3, $5);
+}
+;
+
+
 declaration_statement: TYPE IDENTIFIER ';'{
 
 }

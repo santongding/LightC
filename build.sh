@@ -1,1 +1,1 @@
-yacc -d -v LightC.y
+yacc -d -Wcex LightC.y
