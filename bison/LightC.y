@@ -3,11 +3,13 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
-#include "tac.h"
-#include "obj.h"
-
-int yylex();
+#include "tac.hpp"
+#include "FlexLexer.h"
+yyFlexLexer lex;
 void yyerror(char* msg);
+int yylex(){
+return lex.yylex();
+}
 
 %}
 
@@ -21,104 +23,30 @@ void yyerror(char* msg);
 }
 
 %token INT EQ NE LT LE GT GE UMINUS IF THEN ELSE FI WHILE DO DONE CONTINUE FUNC PRINT RETURN CLASS LINK
-%token <string> INTEGER IDENTIFIER
+%token <string> INTEGER IDENTIFIER TEXT
 
 %right '='
 %left ','
 %left EQ NE LT LE GT GE
 %left '+' '-'
 %left '*' '/'
-
 %right UMINUS
+%nonassoc '(' ')'
+%left '.'
 
 
-%type <string> REF TYPE
-%type <exp> expression_list expression call_expression
-%type <tac> expression_statement declaration_statement return_statement if_statement while_statement statement statement_list block
+%type <exp> expression_list expression
+%type <tac> expression_statement
+/*
+%type <tac>declaration_statement return_statement if_statement while_statement statement statement_list block
 %type<tac> class_declarations class_declaration member_declarations member_declaration function parameter parameter_list
-%type<tac> program
+%type<tac> program*/
 %%
 
-program: class_declarations
-
-class_declarations:class_declaration
-|class_declarations class_declaration{
-	$$ = join_tac($1,$2);
-}
-
-class_declaration:CLASS IDENTIFIER '{' member_declarations '}'{
-	$$ = make_class($2,$4);
-
-}
-
-member_declarations:member_declaration
-|member_declarations member_declaration{
-	$$ = join_tac($1,$2);
-}
-
-member_declaration:declaration_statement
-|function;
-
-parameter:TYPE IDENTIFIER{
-	$$=make_param();
-}
-
-parameter_list:parameter|parameter_list ',' parameter{
-	$$=join_tac($1,$3);
-}
-
-function : IDENTIFIER '(' parameter_list ')' block
-{
-
-	$$=do_func(declare_func($1_, $3, $5);
-	scope_local=0; /* Leave local scope. */
-	sym_tab_local=NULL; /* Clear local symbol table. */
-}
-
-block:'{' statement_list '}'{
- $$ = $2;
-}| '{' '}'{
- $$ = NULL;
-}
-
-statement_list:statement| statement_list statement{
-	$$ = join_tac($1,$2);
-}
-
-statement:declaration_statement|expression_statement|return_statement|if_statement|while_statement;
-
-return_statement: RETURN expression_list ';'
-{
-TAC *t=mk_tac(TAC_RETURN, $2->ret, NULL, NULL);
-t->prev=$2->tac;
-$$=t;
-}
-;
-
-if_statement : IF '(' expression_list ')' block
-{
-$$=do_if($3, $5);
-}
-| IF '(' expression_list ')' block ELSE block
-{
-$$=do_test($3, $5, $7);
-}
-;
-
-while_statement : WHILE '(' expression_list ')' block
-{
-$$=do_while($3, $5);
-}
-;
-
-
-declaration_statement: TYPE IDENTIFIER ';'{
-
-}
 
 expression_statement : expression_list ';'
 {
-	$$=($1).tac;
+	$$=($1)->tac;
 }
 ;
 
@@ -131,7 +59,10 @@ expression_list : expression
 ;
 
 expression : expression '=' expression {
-	$$=do_assign($1, $3);
+	$$=do_assign($1->ret, $3);
+}
+| expression '.' expression{
+	$$=do_locate($1,$3);
 }
 | expression '+' expression
 {
@@ -185,13 +116,13 @@ expression : expression '=' expression {
 {
 	$$=mk_exp(NULL, mk_const(atoi($1)), NULL);
 }
-| REF
+| IDENTIFIER
 {
-	$$=mk_exp(NULL, get_var($1), NULL);
+	$$=mk_exp(NULL,new SYM(SYM_LINK,$1),NULL);
 }
-| call_expression
+| expression '(' expression_list ')'
 {
-	$$=$1;
+$$=do_call_ret($1->ret, $3);
 }
 | error
 {
@@ -201,20 +132,6 @@ expression : expression '=' expression {
 ;
 
 
-call_expression : REF '(' expression_list ')'
-{
-	$$=do_call_ret($1, $3);
-}
-;
-
-REF : IDENTIFIER
-| IDENTIFIER '.' IDENTIFIER{
-	$$ = $1 +'.'+$3;
-}
-TYPE: REF|LINK REF{
-	TYPE = "<LINK>"+$2
-}
-
 %%
 
 void yyerror(char* msg)
@@ -222,6 +139,7 @@ void yyerror(char* msg)
 	fprintf(stderr, "%s: line %d\n", msg, yylineno);
 	exit(0);
 }
+
 
 int main(int argc,   char *argv[])
 {
@@ -251,11 +169,11 @@ int main(int argc,   char *argv[])
 	}
 
 
-	tac_init();
+	//tac_init();
 
 	yyparse();
 
-	tac_print();
+	//tac_print(tac_last);
 
 	return 0;
 }

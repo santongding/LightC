@@ -1,9 +1,10 @@
 %{
-#include "tac.h"
-#include "mini.y.h"
+#include "tac.hpp"
+#include "bison.hpp"
 %}
 
 %option yylineno
+%option noyywrap
 
 %%
 "link" { return LINK; }

@@ -1,1 +1,0 @@
-yacc -d -Wcex LightC.y
