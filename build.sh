@@ -1,0 +1,1 @@
+yacc -d mini.y
