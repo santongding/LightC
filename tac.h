@@ -1,14 +1,13 @@
+using std::string;
 /* type of symbol */
 enum SymbolType{
-    SYM_UNDEF = 0,
-    SYM_VAR = 1,
-    SYM_REF = 2,
-    SYM_CONST = 3,
-    SYM_Pattern = 4
+    SYM_VAR = 0,
+    SYM_REF = 1,
+    SYM_LINK = 2,
 };
 
 /* type of tac */ 
-#define TAC_UNDEF 0 /* undefine */
+#define TAC_UNDEF 0 /* undefined */
 #define TAC_ADD 1 /* a=b+c */
 #define TAC_SUB 2 /* a=b-c */
 #define TAC_MUL 3 /* a=b*c */
@@ -33,27 +32,22 @@ enum SymbolType{
 #define TAC_RETURN 22 /* return a */
 #define TAC_BEGINCLASS 23 /*class begin*/
 #define TAC_ENDCLASS 24 /*class end*/
-#define TAC_GETVAR 25 /*get var named b of instance a*/
+
+typedef union sym_val{
+    std::string name;
+    int value;
+};
 
 /* struct */
 typedef struct sym
 {
 	/*	
-		type:SYM_VAR name:abc value:98 offset:-1
-		type:SYM_VAR name:bcd value:99 offset:4
-		type:SYM_LABEL name:L1/max			
-		type:SYM_INT value:1			
-		type:SYM_FUNC name:max address:1234		
-		type:SYM_TEXT name:"hello" label:10
+        SYM_VAR : value.value = 0x2333,
+        SYM_REF : value.name = ref var's name, ref cnt ++,
+        SYM_LINK : value.name = ref var's name, ref cnt doesn't change
 	*/
 	int type;
-	int store; /* 0:global, 1:local */
-	char *name;
-	int offset;
-	int value;
-	int label;
-	struct tac *address; /* SYM_FUNC */	
-	struct sym *next;
+	sym_val value;
 } SYM;
 
 typedef struct tac /* TAC instruction node */
@@ -84,14 +78,14 @@ void tac_complete();
 void tac_dump();
 void tac_print(TAC *i);
 SYM *mk_const(int n);
-SYM *mk_text(char *text);
+SYM *mk_text(const string& s);
 TAC *mk_tac(int op, SYM *a, SYM *b, SYM *c);
 EXP *mk_exp(EXP *next, SYM *ret, TAC *code);
 TAC *join_tac(TAC *c1, TAC *c2);
-SYM *get_var(char *name); 
-SYM *declare_func(char *name);
-TAC *declare_var(char *name);
-TAC *declare_para(char *name);
+SYM *get_var(const string & name);
+SYM *declare_func(const string & name);
+TAC *declare_var(const string & name);
+TAC *declare_para(const string & name);
 TAC *do_func(SYM *name,    TAC *args, TAC *code);
 TAC *do_assign(SYM *var, EXP *exp);
 TAC *do_call(char *name, EXP *arglist);
@@ -103,5 +97,5 @@ EXP *do_bin( int binop, EXP *exp1, EXP *exp2);
 EXP *do_cmp( int binop, EXP *exp1, EXP *exp2);
 EXP *do_un( int unop, EXP *exp);
 EXP *do_call_ret(char *name, EXP *arglist);
-void error(char *str);
+void error(const string & s);
 

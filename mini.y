@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <string>
 #include "tac.h"
 #include "obj.h"
 
@@ -19,7 +20,7 @@ void yyerror(char* msg);
 	EXP	*exp;
 }
 
-%token INT EQ NE LT LE GT GE UMINUS IF THEN ELSE FI WHILE DO DONE CONTINUE FUNC PRINT RETURN
+%token INT EQ NE LT LE GT GE UMINUS IF THEN ELSE FI WHILE DO DONE CONTINUE FUNC PRINT RETURN CLASS
 %token <string> INTEGER IDENTIFIER TEXT
 
 %left EQ NE LT LE GT GE
