@@ -211,7 +211,9 @@ REF : IDENTIFIER
 | IDENTIFIER '.' IDENTIFIER{
 	$$ = $1 +'.'+$3;
 }
-TYPE: REF;
+TYPE: REF|LINK REF{
+	TYPE = "<LINK>"+$2
+}
 
 %%
 
