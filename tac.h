@@ -4,6 +4,7 @@ enum SymbolType{
     SYM_VAR = 0,
     SYM_REF = 1,
     SYM_LINK = 2,
+    SYM_TYPE = 3
 };
 
 /* type of tac */ 
@@ -33,7 +34,7 @@ enum SymbolType{
 #define TAC_BEGINCLASS 23 /*class begin*/
 #define TAC_ENDCLASS 24 /*class end*/
 
-typedef union sym_val{
+typedef union SymbolVal{
     std::string name;
     int value;
 };
@@ -42,12 +43,14 @@ typedef union sym_val{
 typedef struct sym
 {
 	/*	
-        SYM_VAR : value.value = 0x2333,
+        SYM_VAR : value.value = 0x2333
         SYM_REF : value.name = ref var's name, ref cnt ++,
         SYM_LINK : value.name = ref var's name, ref cnt doesn't change
+        SYM_TYPE : value.name = type's name, name = ""
 	*/
-	int type;
-	sym_val value;
+	SymbolType type;
+    string name;
+	SymbolVal value;
 } SYM;
 
 typedef struct tac /* TAC instruction node */
@@ -98,4 +101,4 @@ EXP *do_cmp( int binop, EXP *exp1, EXP *exp2);
 EXP *do_un( int unop, EXP *exp);
 EXP *do_call_ret(char *name, EXP *arglist);
 void error(const string & s);
-
+TAC * declare_class(TAC * tac);

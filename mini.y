@@ -17,10 +17,10 @@ void yyerror(char* msg);
 	char *string;
 	SYM *sym;
 	TAC *tac;
-	EXP	*exp;
+	EXP *exp;
 }
 
-%token INT EQ NE LT LE GT GE UMINUS IF THEN ELSE FI WHILE DO DONE CONTINUE FUNC PRINT RETURN CLASS
+%token INT EQ NE LT LE GT GE UMINUS IF THEN ELSE FI WHILE DO DONE CONTINUE FUNC PRINT RETURN CLASS LINK
 %token <string> INTEGER IDENTIFIER TEXT
 
 %left EQ NE LT LE GT GE
@@ -28,35 +28,57 @@ void yyerror(char* msg);
 %left '*' '/'
 %right UMINUS
 
-%type <tac> program function_declaration_list function_declaration function parameter_list variable_list statement assignment_statement print_statement print_list print_item return_statement null_statement if_statement while_statement call_statement block declaration_list declaration statement_list error
+%type <string> TYPE
+%type <string> REF
+%type <tac> program declaration_list function_declaration function_declarations class_declaration function parameter_list variable_list statement declare_statement expression_statement return_statement null_statement if_statement while_statement block statement_list error
 %type <exp> argument_list expression_list expression call_expression
-%type <sym> function_head
 
 %%
 
-program : function_declaration_list
+program : declaration_list
 {
 	tac_last=$1;
 	tac_complete();
 }
 ;
 
-function_declaration_list : function_declaration
-| function_declaration_list function_declaration
+declaration_list : class_declaration | function_declaration
+| declaration_list function_declaration
+{
+	$$=join_tac($1, $2);
+}
+| declaration_list class_declaration
 {
 	$$=join_tac($1, $2);
 }
 ;
 
+class_declaration: CLASS IDENTIFIER '{' function_declarations '}'{
+	$$ = declare_class($2,$4);
+};
+function_declarations:function_declaration|
+function_declarations function_declaration{
+	$$ =join_tac($1, $2);
+};
+
 function_declaration : function
 | declaration
 ;
 
-declaration : INT variable_list ';'
+REF : IDENTIFIER
+| IDENTIFIER '.' IDENTIFIER{
+	$$ = $1 +'.'+$3;
+}
+
+TYPE:REF;
+
+declaration : TYPE variable_list ';'
 {
 	$$=$2;
 }
 ;
+
+
 
 variable_list : IDENTIFIER
 {
@@ -68,9 +90,10 @@ variable_list : IDENTIFIER
 }               
 ;
 
-function : function_head '(' parameter_list ')' block
+function : IDENTIFIER '(' parameter_list ')' block
 {
-	$$=do_func($1, $3, $5);
+
+	$$=do_func(declare_func($1_, $3, $5);
 	scope_local=0; /* Leave local scope. */
 	sym_tab_local=NULL; /* Clear local symbol table. */
 }
@@ -80,20 +103,14 @@ function : function_head '(' parameter_list ')' block
 	$$=NULL;
 }
 ;
+parameter : TYPE IDENTIFIER{
+	$$=declare_para($2);
 
-function_head : IDENTIFIER
-{
-	$$=declare_func($1);
-	scope_local=1; /* Enter local scope. */
-	sym_tab_local=NULL; /* Init local symbol table. */
 }
-;
 
-parameter_list : IDENTIFIER
-{
-	$$=declare_para($1);
-}               
-| parameter_list ',' IDENTIFIER
+
+parameter_list : parameter
+| parameter_list ',' parameter
 {
 	$$=join_tac($1, declare_para($3));
 }               
@@ -103,35 +120,19 @@ parameter_list : IDENTIFIER
 }
 ;
 
-statement : assignment_statement ';'
-| call_statement ';'
+statement : expression_statement ';'
+| delare_statement;
 | return_statement ';'
-| print_statement ';'
 | null_statement ';'
 | if_statement
 | while_statement
 | block
-| error
-{
-	error("Bad statement syntax");
-	$$=NULL;
-}
 ;
 
-block : '{' declaration_list statement_list '}'
+block : '{' statement_list '}'
 {
-	$$=join_tac($2, $3);
+	$$=$2;
 }               
-;
-
-declaration_list        :
-{
-	$$=NULL;
-}
-| declaration_list declaration
-{
-	$$=join_tac($1, $2);
-}
 ;
 
 statement_list : statement
@@ -141,13 +142,16 @@ statement_list : statement
 }               
 ;
 
-assignment_statement : IDENTIFIER '=' expression
+expression_statement : expression
 {
-	$$=do_assign(get_var($1), $3);
+	$$=($1).tac;
 }
 ;
 
-expression : expression '+' expression
+expression : REF '=' expression{
+	$$=do_assign(get_var($1), $3);
+}
+| expression '+' expression
 {
 	$$=do_bin(TAC_ADD, $1, $3);
 }
@@ -199,21 +203,22 @@ expression : expression '+' expression
 {
 	$$=mk_exp(NULL, mk_const(atoi($1)), NULL);
 }
-| IDENTIFIER
+| REF
 {
 	$$=mk_exp(NULL, get_var($1), NULL);
 }
 | call_expression
 {
 	$$=$1;
-}               
+}
 | error
 {
 	error("Bad expression syntax");
 	$$=mk_exp(NULL, NULL, NULL);
 }
 ;
-
+declare_statement: REF parameter_list
+;
 argument_list           :
 {
 	$$=NULL;
@@ -229,29 +234,6 @@ expression_list : expression
 }
 ;
 
-print_statement : PRINT '(' print_list ')'
-{
-	$$=$3;
-}               
-;
-
-print_list : print_item
-| print_list ',' print_item
-{
-	$$=join_tac($1, $3);
-}               
-;
-
-print_item : expression
-{
-	$$=join_tac($1->tac,
-	do_lib("PRINTN", $1->ret));
-}
-| TEXT
-{
-	$$=do_lib("PRINTS", mk_text($1));
-}
-;
 
 return_statement : RETURN expression
 {
@@ -283,13 +265,7 @@ while_statement : WHILE '(' expression ')' block
 }               
 ;
 
-call_statement : IDENTIFIER '(' argument_list ')'
-{
-	$$=do_call($1, $3);
-}
-;
-
-call_expression : IDENTIFIER '(' argument_list ')'
+call_expression : REF '(' argument_list ')'
 {
 	$$=do_call_ret($1, $3);
 }
@@ -330,12 +306,12 @@ int main(int argc,   char *argv[])
 		return 0;
 	}
 
-/*
+
 	tac_init();
 
 	yyparse();
 
-	tac_obj();*/
+	tac_print();
 
 	return 0;
 }

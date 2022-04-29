@@ -1,1 +1,1 @@
-yacc -d mini.y
+yacc -d -v LightC.y

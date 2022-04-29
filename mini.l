@@ -6,6 +6,7 @@
 %option yylineno
 
 %%
+"link" { return LINK; }
 "class" { return CLASS; }
 
 "int"  {  return INT;  }
