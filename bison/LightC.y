@@ -62,7 +62,7 @@ class:CLASS IDENTIFIER '{' class_members '}'{
 class_members:class_member|class_members class_member{
 	$$=join_tac($1,$2);
 }
-class_member:class|function|declare_statement;
+class_member:function|declare_statement;
 
 function:type IDENTIFIER '(' params ')' block{
 	$$=mk_func($1,$2,$4,$6);
@@ -100,10 +100,11 @@ statement:expression_statement
 
 type_id:IDENTIFIER{
 	$$=new SYM(SYM_TYPE,$1);
-}
+};
+/*
 | type_id ':' IDENTIFIER{
 	$$ =  new SYM(SYM_TYPE,$1->ToStr()+":"+$3);
-}
+}*/
 
 type:type_id{
 	$$ = new SYM(SYM_TYPE,"ref|"+$1->ToStr());
