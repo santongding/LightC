@@ -1,0 +1,22 @@
+class test{
+class inner{
+    int x;
+    int y;
+    void func(int x,asd v){
+
+    }
+}
+    int a;
+    int b;
+    val c;
+    void func(){
+        if(a){
+        a=1;
+        }else{
+            c=2;
+        }
+        while(b){
+
+        }
+    }
+}

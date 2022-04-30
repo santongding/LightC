@@ -196,7 +196,7 @@ EXP *do_call_ret(EXP *obj, const string &func, EXP *arglist) {
         code = temp;
 
         arglist = arglist->next;
-    };
+    }
     code = join_tac(mk_tac(TAC_ACTUAL,obj->ret,NULL,NULL,false),code);
 
     temp = join_tac(do_exp_list(lis)->tac, code);

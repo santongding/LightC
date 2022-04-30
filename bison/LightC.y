@@ -40,23 +40,38 @@ int getyylineno(){
 %type <sym> type
 %type <exp> expression_list expression
 %type <tac> expression_statement return_statement declare_statement if_statement while_statement statement_list statement block
-%type <tac> function params param program
+%type <tac> function params param program class classes class_member class_members
 /*
 %type <tac>declaration_statement return_statement if_statement while_statement statement statement_list block
 %type<tac> class_declarations class_declaration member_declarations member_declaration function parameter parameter_list
 %type<tac> program*/
 %%
 
-program:function{
+program:classes{
 	tac_last=$1;
 	tac_complete();
 }
+
+classes:class| classes class{
+	$$=join_tac($1,$2);
+}
+
+class:CLASS IDENTIFIER '{' class_members '}'{
+	$$=mk_class($2,$4);
+}
+class_members:class_member|class_members class_member{
+	$$=join_tac($1,$2);
+}
+class_member:class|function|declare_statement;
 
 function:type IDENTIFIER '(' params ')' block{
 	$$=mk_func($1,$2,$4,$6);
 }
 
-params:param
+params:{
+$$=NULL;
+}
+|param
 |params ',' param{
 	$$=join_tac($1,$3);
 }
