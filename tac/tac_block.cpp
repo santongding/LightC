@@ -45,3 +45,12 @@ TAC *do_test(EXP *exp, TAC *stmt1, TAC *stmt2) {
     }
 
 }
+
+TAC *do_while(EXP *exp, TAC *stmt) {
+    TAC *label = mk_tac(TAC_LABEL, new SYM(SYM_LABEL, "label" + std::to_string(next_label++)), NULL, NULL, false);
+    TAC *code = mk_tac(TAC_GOTO, label->a, NULL, NULL, false);
+
+    code->prev = stmt; /* Bolt on the goto */
+
+    return join_tac(label, do_test(exp, code, nullptr));
+}

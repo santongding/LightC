@@ -39,7 +39,7 @@ int getyylineno(){
 
 
 %type <exp> expression_list expression
-%type <tac> expression_statement return_statement if_statement statement_list statement block program
+%type <tac> expression_statement return_statement if_statement while_statement statement_list statement block program
 /*
 %type <tac>declaration_statement return_statement if_statement while_statement statement statement_list block
 %type<tac> class_declarations class_declaration member_declarations member_declaration function parameter parameter_list
@@ -67,6 +67,14 @@ statement_list:statement
 statement:expression_statement
 |return_statement
 |if_statement;
+|while_statement;
+
+
+while_statement : WHILE '(' expression ')' block
+{
+	$$=do_while($3, $5);
+}
+;
 
 if_statement : IF '(' expression ')' block
 {

@@ -16,4 +16,8 @@ if(a=3){}else{}
            if(as=2){
            as=3;
            }
+
+           while(x){
+           }
 }
+

@@ -155,4 +155,6 @@ void error(const char *str);
 
 TAC *do_test(EXP *exp, TAC *stmt1, TAC *stmt2);
 
+TAC *do_while(EXP *exp, TAC *stmt);
+
 #endif //LIGHTC_TAC_HPP

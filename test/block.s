@@ -35,4 +35,8 @@ block begin:
 as = 3
 block end
 label label5
+label label6
+ifz x goto label7
+goto label6
+label label7
 block end

@@ -3,11 +3,12 @@
 //
 #include "tac.hpp"
 
-int next_tmp;
+int next_tmp = 0;
 TAC *tac_last, *tac_first;
 
 void tac_init() {
     next_tmp = 0;
+    next_label = 0;
 }
 
 void tac_complete() {
