@@ -10,6 +10,9 @@ void yyerror(char* msg);
 int yylex(){
 return lex.yylex();
 }
+int getyylineno(){
+	return lex.lineno();
+}
 
 %}
 
@@ -36,30 +39,55 @@ return lex.yylex();
 
 
 %type <exp> expression_list expression
-%type <tac> expression_statement
+%type <tac> expression_statement return_statement statement_list statement program
 /*
 %type <tac>declaration_statement return_statement if_statement while_statement statement statement_list block
 %type<tac> class_declarations class_declaration member_declarations member_declaration function parameter parameter_list
 %type<tac> program*/
 %%
 
+program:statement_list{
+	tac_last=$1;
+	tac_complete();
+}
+
+statement_list:statement
+| statement_list statement{
+	$$ = join_tac($1,$2);
+
+}
+
+statement:expression_statement
+|return_statement;
+
+return_statement:RETURN ';'{
+		TAC *t=mk_tac(TAC_RETURN, NULL, NULL, NULL);
+        	$$=t;
+}
+| RETURN expression ';'{
+		TAC *t=mk_tac(TAC_RETURN, $2->ret, NULL, NULL);
+        	t->prev=$2->tac;
+        	$$=t;
+}
 
 expression_statement : expression_list ';'
 {
-	$$=($1)->tac;
+	$$ = do_exp_list($1)->tac;
 }
 ;
 
-expression_list : expression
+expression_list : {
+	$$=NULL;
+}
+| expression
 |  expression_list ',' expression
 {
-	$3->next=$1;
-	$$=$3;
+	$$=join_exp($1,$3);
 }
 ;
 
 expression : expression '=' expression {
-	$$=do_assign($1->ret, $3);
+	$$=do_assign($1, $3);
 }
 | expression '.' expression{
 	$$=do_locate($1,$3);
@@ -110,7 +138,7 @@ expression : expression '=' expression {
 }
 | '(' expression_list ')'
 {
-	$$=$2;
+	$$=do_exp_list($2);
 }
 | INTEGER
 {
@@ -120,9 +148,9 @@ expression : expression '=' expression {
 {
 	$$=mk_exp(NULL,new SYM(SYM_LINK,$1),NULL);
 }
-| expression '(' expression_list ')'
+| expression '.' IDENTIFIER '(' expression_list ')'
 {
-$$=do_call_ret($1->ret, $3);
+	$$=do_call_ret($1,$3,$5);
 }
 | error
 {
@@ -136,7 +164,7 @@ $$=do_call_ret($1->ret, $3);
 
 void yyerror(char* msg)
 {
-	fprintf(stderr, "%s: line %d\n", msg, yylineno);
+	fprintf(stderr, "%s: line %d\n", msg, getyylineno());
 	exit(0);
 }
 
@@ -169,11 +197,10 @@ int main(int argc,   char *argv[])
 	}
 
 
-	//tac_init();
+	tac_init();
 
 	yyparse();
-
-	//tac_print(tac_last);
+	tac_dump();
 
 	return 0;
 }

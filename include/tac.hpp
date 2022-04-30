@@ -11,7 +11,8 @@ enum SymbolType {
     SYM_REF = 1,
     SYM_LINK = 2,
     SYM_VAR = 3,
-    SYM_CONST = 4
+    SYM_CONST = 4,
+    SYM_TYPE
 };
 
 /* type of tac */
@@ -40,7 +41,8 @@ enum SymbolType {
 #define TAC_RETURN 22 /* return a */
 #define TAC_BEGINCLASS 23 /*class begin*/
 #define TAC_ENDCLASS 24 /*class end*/
-#define TAC_LOCATE 25
+#define TAC_DECLARE_AND_LOCATE 25
+#define TAC_TMP 26 /* tmp a */
 
 /* struct */
 class SYM {
@@ -53,12 +55,20 @@ class SYM {
 public:
     SYM(SymbolType type, int value) : _type(type), _value(value) {
         assert(type == SymbolType::SYM_CONST);
+
     }
 
 
-    SYM(SymbolType type, const string &name) : _type(type), _name(name), _value(0){
+    SYM(SymbolType type, const string &name) : _type(type), _name(name), _value(0) {
         assert(name.length());
         assert(type != SymbolType::SYM_CONST);
+    }
+
+    const string &ToStr() {
+        if (IsConst()) {
+            _name = std::to_string(_value);
+        }
+        return _name;
     }
 
     int &GetValue() {
@@ -79,6 +89,7 @@ private:
 
 typedef struct tac /* TAC instruction node */
 {
+    int linenum;
     struct tac *next; /* Next instruction */
     struct tac *prev; /* Previous instruction */
     int op; /* TAC instruction */
@@ -95,10 +106,9 @@ typedef struct exp /* Parser expression */
 } EXP;
 
 /* global var */
-extern int yylineno, scope_local, next_tmp, next_label;
-extern SYM *sym_tab_global, *sym_tab_local;
+extern int  next_tmp, next_label;
 extern TAC *tac_first, *tac_last;
-
+int getyylineno();
 /* function */
 void tac_init();
 
@@ -113,15 +123,13 @@ string mk_tmp();
 
 SYM *mk_const(int n);
 
-SYM *mk_text(const string &s);
-
 TAC *mk_tac(int op, SYM *a, SYM *b, SYM *c);
 
 EXP *mk_exp(EXP *next, SYM *ret, TAC *code);
 
 TAC *join_tac(TAC *c1, TAC *c2);
 
-EXP *do_assign(SYM *var, EXP *exp);
+EXP *do_assign(EXP * var, EXP *exp);
 
 EXP *do_un(int unop, EXP *exp);
 
@@ -131,7 +139,12 @@ EXP *do_cmp(int binop, EXP *exp1, EXP *exp2);
 
 EXP *do_locate(EXP *x, EXP *y);
 
-EXP *do_call_ret(SYM *sym, EXP *arglist);
+EXP *do_call_ret(EXP *obj,const string & func ,EXP *arglist);
 
-void error(char *str) ;
+EXP * do_exp_list(EXP * exps);
+
+EXP * join_exp(EXP * x,EXP * y);
+
+void error(char *str);
+
 #endif //LIGHTC_TAC_HPP

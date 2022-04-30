@@ -2,9 +2,153 @@
 // Created by os on 4/29/22.
 //
 #include "tac.hpp"
+
 int next_tmp;
-int yylineno;
-TAC * tac_last;
+TAC *tac_last, *tac_first;
+
+void tac_init() {
+    next_tmp = 0;
+}
+
+void tac_complete() {
+    TAC *cur = NULL;        /* Current TAC */
+    TAC *prev = tac_last;    /* Previous TAC */
+
+    while (prev != NULL) {
+        prev->next = cur;
+        cur = prev;
+        prev = prev->prev;
+    }
+
+    tac_first = cur;
+}
+
+int lastline = -1;
+
+void tac_print(TAC *i) {
+    if (i->linenum != lastline) {
+        printf("/.............line:%04d............/\n", i->linenum);
+        lastline = i->linenum;
+    }
+    switch (i->op) {
+        case TAC_UNDEF:
+            printf("undef");
+            break;
+
+        case TAC_ADD:
+            printf("%s = %s + %s", i->a->ToStr().c_str(), i->b->ToStr().c_str(), i->c->ToStr().c_str());
+            break;
+
+        case TAC_SUB:
+            printf("%s = %s - %s", i->a->ToStr().c_str(), i->b->ToStr().c_str(), i->c->ToStr().c_str());
+            break;
+
+        case TAC_MUL:
+            printf("%s = %s * %s", i->a->ToStr().c_str(), i->b->ToStr().c_str(), i->c->ToStr().c_str());
+            break;
+
+        case TAC_DIV:
+            printf("%s = %s / %s", i->a->ToStr().c_str(), i->b->ToStr().c_str(), i->c->ToStr().c_str());
+            break;
+
+        case TAC_EQ:
+            printf("%s = (%s == %s)", i->a->ToStr().c_str(), i->b->ToStr().c_str(), i->c->ToStr().c_str());
+            break;
+
+        case TAC_NE:
+            printf("%s = (%s != %s)", i->a->ToStr().c_str(), i->b->ToStr().c_str(), i->c->ToStr().c_str());
+            break;
+
+        case TAC_LT:
+            printf("%s = (%s < %s)", i->a->ToStr().c_str(), i->b->ToStr().c_str(), i->c->ToStr().c_str());
+            break;
+
+        case TAC_LE:
+            printf("%s = (%s <= %s)", i->a->ToStr().c_str(), i->b->ToStr().c_str(), i->c->ToStr().c_str());
+            break;
+
+        case TAC_GT:
+            printf("%s = (%s > %s)", i->a->ToStr().c_str(), i->b->ToStr().c_str(), i->c->ToStr().c_str());
+            break;
+
+        case TAC_GE:
+            printf("%s = (%s >= %s)", i->a->ToStr().c_str(), i->b->ToStr().c_str(), i->c->ToStr().c_str());
+            break;
+
+        case TAC_NEG:
+            printf("%s = - %s", i->a->ToStr().c_str(), i->b->ToStr().c_str());
+            break;
+
+        case TAC_COPY:
+            printf("%s = %s", i->a->ToStr().c_str(), i->b->ToStr().c_str());
+            break;
+
+        case TAC_GOTO:
+            printf("goto %s", i->a->ToStr().c_str());
+            break;
+
+        case TAC_IFZ:
+            printf("ifz %s goto %s", i->b->ToStr().c_str(), i->a->ToStr().c_str());
+            break;
+
+        case TAC_ACTUAL:
+            printf("actual %s", i->a->ToStr().c_str());
+            break;
+
+        case TAC_FORMAL:
+            printf("formal %s", i->a->ToStr().c_str());
+            break;
+
+        case TAC_CALL:
+            printf("%s = call %s -> %s", i->a->ToStr().c_str(), i->b->ToStr().c_str(), i->c->ToStr().c_str());
+            break;
+
+        case TAC_RETURN:
+            if (i->a != NULL)
+                printf("return %s", i->a->ToStr().c_str());
+            else printf("return");
+            break;
+
+        case TAC_LABEL:
+            printf("label %s", i->a->ToStr().c_str());
+            break;
+
+        case TAC_VAR:
+            printf("var %s", i->a->ToStr().c_str());
+            break;
+
+        case TAC_BEGINFUNC:
+            printf("begin");
+            break;
+
+        case TAC_ENDFUNC:
+            printf("end");
+            break;
+
+        case TAC_DECLARE_AND_LOCATE:
+            printf("tmp %s = %s -> %s", i->a->ToStr().c_str(), i->b->ToStr().c_str(), i->c->ToStr().c_str());
+            break;
+        case TAC_TMP:
+            printf("tmp %s", i->a->ToStr().c_str());
+            break;
+
+        default:
+            error("unknown TAC opcode");
+            break;
+    }
+
+    fflush(stdout);
+
+}
+
+void tac_dump() {
+    TAC *cur;
+    for (cur = tac_first; cur != NULL; cur = cur->next) {
+        tac_print(cur);
+        printf("\n");
+    }
+}
+
 string mk_tmp() {
 
     char name[12];
@@ -18,34 +162,55 @@ SYM *mk_const(int n) {
     return new SYM(SYM_CONST, n);
 }
 
-SYM *mk_text(const string &s) {
-
-}
-
 TAC *mk_tac(int op, SYM *a, SYM *b, SYM *c) {
+    TAC *t = new TAC;
 
+    t->next = NULL; /* Set these for safety */
+    t->prev = NULL;
+    t->op = op;
+    t->a = a;
+    t->b = b;
+    t->c = c;
+    t->linenum = getyylineno();
+
+    return t;
 }
 
 EXP *mk_exp(EXP *next, SYM *ret, TAC *code) {
+    EXP *exp = new EXP;
 
+    exp->next = next;
+    exp->ret = ret;
+    exp->tac = code;
+
+    return exp;
 }
 
 TAC *join_tac(TAC *c1, TAC *c2) {
+    TAC *t;
 
+    if (c1 == NULL) return c2;
+    if (c2 == NULL) return c1;
+
+    /* Run down c2, until we get to the beginning and then add c1 */
+    t = c2;
+    while (t->prev != NULL)
+        t = t->prev;
+
+    t->prev = c1;
+    return c2;
 }
 
-EXP *do_assign(SYM *var, EXP *exp)
-{
+EXP *do_assign(EXP *var, EXP *exp) {
     TAC *code;
 
-    if(var->IsConst()) error("assignment to non-variable");
+    if (var->ret->IsConst()) error("assignment to non-variable");
 
-    code=mk_tac(TAC_COPY, var, exp->ret, NULL);
-    code->prev=exp->tac;
+    code = mk_tac(TAC_COPY, var->ret, exp->ret, NULL);
+    code->prev = exp->tac;
 
-    exp->ret  = var;
-    exp->tac = code;
-    return exp;
+    var->tac = join_tac(var->tac, code);
+    return var;
 }
 
 EXP *do_un(int unop, EXP *exp) {
@@ -177,23 +342,34 @@ string find_first_and_truncate(string &s) {
 EXP *do_locate(EXP *x, EXP *y) {
     auto sx = x->ret;
     auto sy = y->ret;
-    SYM *ret = new SYM(SYM_LINK, mk_tmp());
-    auto code = mk_tac(TAC_LOCATE, ret, sx, sy);
+    SYM *ret = new SYM(SYM_UNKNOWN, mk_tmp());
+    auto code = mk_tac(TAC_DECLARE_AND_LOCATE, ret, sx, sy);
     x->ret = ret;
     code->prev = x->tac;
     x->tac = join_tac(code, y->tac);
     return x;
 }
 
-EXP *do_call_ret(SYM *sym, EXP *arglist) {
+EXP *do_exp_list(EXP *exps) {
+    TAC *code = nullptr;
+    EXP *ret = exps;
+    while (exps != nullptr) {
+        ret->ret = exps->ret;
+        code = join_tac(code, exps->tac);
+        exps = exps->next;
+    }
+    ret->tac = code;
+    return ret;
+}
 
-    EXP *alt; /* For counting args */
+EXP *do_call_ret(EXP *obj, const string &func, EXP *arglist) {
+
     SYM *ret; /* Where function result will go */
-    TAC *code; /* Resulting code */
+    TAC *code = nullptr; /* Resulting code */
     TAC *temp; /* Temporary for building code */
 
 
-    for (alt = arglist; alt != NULL; alt = alt->next) code = join_tac(code, alt->tac);
+    auto lis = arglist;
 
     while (arglist != NULL) /* Generate ARG instructions */
     {
@@ -201,18 +377,33 @@ EXP *do_call_ret(SYM *sym, EXP *arglist) {
         temp->prev = code;
         code = temp;
 
-        alt = arglist->next;
-        arglist = alt;
+        arglist = arglist->next;
     };
+
+    temp = join_tac(do_exp_list(lis)->tac, code);
     ret = new SYM(SYM_UNKNOWN, mk_tmp()); /* For the result */
-    code = mk_tac(TAC_VAR, ret, NULL, NULL);
-    temp = mk_tac(TAC_CALL, ret, sym, NULL);
+    code = mk_tac(TAC_TMP, ret, NULL, NULL);
+    code->prev = temp;
+    temp = mk_tac(TAC_CALL, ret, obj->ret, new SYM(SYM_LINK, func));
+
     temp->prev = code;
     code = temp;
 
-    return mk_exp(NULL, ret, code);
+
+    obj->tac = join_tac(obj->tac, code);
+    obj->ret = ret;
+
+    return obj;
 }
+
+EXP *join_exp(EXP *x, EXP *y) {
+    auto tp = x;
+    while (tp->next)tp = tp->next;
+    tp->next = y;
+    return x;
+}
+
 void error(char *str) {
-fprintf(stderr, "error: %s\n", str);
-exit(1);
+    fprintf(stderr, "error: %s\n", str);
+    exit(1);
 }
