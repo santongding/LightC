@@ -39,33 +39,51 @@ int getyylineno(){
 
 
 %type <exp> expression_list expression
-%type <tac> expression_statement return_statement statement_list statement program
+%type <tac> expression_statement return_statement if_statement statement_list statement block program
 /*
 %type <tac>declaration_statement return_statement if_statement while_statement statement statement_list block
 %type<tac> class_declarations class_declaration member_declarations member_declaration function parameter parameter_list
 %type<tac> program*/
 %%
 
-program:statement_list{
+program:block{
 	tac_last=$1;
 	tac_complete();
 }
 
+block:'{' statement_list '}'{
+	$$=mk_block($2);
+}
+| '{' '}'{
+	$$=NULL;
+}
 statement_list:statement
 | statement_list statement{
+
 	$$ = join_tac($1,$2);
 
 }
 
 statement:expression_statement
-|return_statement;
+|return_statement
+|if_statement;
+
+if_statement : IF '(' expression ')' block
+{
+	$$=do_test($3, $5,NULL);
+}
+| IF '(' expression ')' block ELSE block
+{
+	$$=do_test($3, $5, $7);
+}
+;
 
 return_statement:RETURN ';'{
-		TAC *t=mk_tac(TAC_RETURN, NULL, NULL, NULL);
+		TAC *t=mk_tac(TAC_RETURN, NULL, NULL, NULL,true);
         	$$=t;
 }
 | RETURN expression ';'{
-		TAC *t=mk_tac(TAC_RETURN, $2->ret, NULL, NULL);
+		TAC *t=mk_tac(TAC_RETURN, $2->ret, NULL, NULL,true);
         	t->prev=$2->tac;
         	$$=t;
 }

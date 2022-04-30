@@ -5,6 +5,8 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 add_library(${PROJECT_NAME}_lib STATIC
         ${PROJECT_SOURCE_DIR}/bison/lex.yy.cc
         tac/tac_exp.cpp
+        tac/tac_base.cpp
+        tac/tac_block.cpp
         )
 
 add_executable(LightC ${PROJECT_SOURCE_DIR}/bison/bison.cpp )

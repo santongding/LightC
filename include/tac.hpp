@@ -12,7 +12,9 @@ enum SymbolType {
     SYM_LINK = 2,
     SYM_VAR = 3,
     SYM_CONST = 4,
-    SYM_TYPE
+    SYM_TYPE =5,
+    SYM_LABEL =6,
+
 };
 
 /* type of tac */
@@ -43,6 +45,8 @@ enum SymbolType {
 #define TAC_ENDCLASS 24 /*class end*/
 #define TAC_DECLARE_AND_LOCATE 25
 #define TAC_TMP 26 /* tmp a */
+#define TAC_BEGINBLOCK 27
+#define TAC_ENDBLOCK 28
 
 /* struct */
 class SYM {
@@ -123,7 +127,7 @@ string mk_tmp();
 
 SYM *mk_const(int n);
 
-TAC *mk_tac(int op, SYM *a, SYM *b, SYM *c);
+TAC *mk_tac(int op, SYM *a, SYM *b, SYM *c, bool lineno);
 
 EXP *mk_exp(EXP *next, SYM *ret, TAC *code);
 
@@ -145,6 +149,10 @@ EXP * do_exp_list(EXP * exps);
 
 EXP * join_exp(EXP * x,EXP * y);
 
-void error(char *str);
+TAC * mk_block(TAC *x);
+
+void error(const char *str);
+
+TAC *do_test(EXP *exp, TAC *stmt1, TAC *stmt2);
 
 #endif //LIGHTC_TAC_HPP
