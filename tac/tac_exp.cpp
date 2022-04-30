@@ -3,9 +3,10 @@
 //
 #include "tac.hpp"
 
-TAC *mk_tac(int op, SYM *a, SYM *b, SYM *c){
-    return mk_tac(op,a,b,c, true);
+TAC *mk_tac(int op, SYM *a, SYM *b, SYM *c) {
+    return mk_tac(op, a, b, c, true);
 }
+
 EXP *mk_exp(EXP *next, SYM *ret, TAC *code) {
     EXP *exp = new EXP;
 
@@ -15,7 +16,6 @@ EXP *mk_exp(EXP *next, SYM *ret, TAC *code) {
 
     return exp;
 }
-
 
 
 EXP *do_assign(EXP *var, EXP *exp) {
@@ -46,7 +46,7 @@ EXP *do_un(int unop, EXP *exp) {
         return exp; /* The new expression */
     }
 
-    temp = mk_tac(TAC_VAR, new SYM(SYM_UNKNOWN, mk_tmp()), NULL, NULL);
+    temp = mk_tac(TAC_DECLARE, new SYM(SYM_UNKNOWN, mk_tmp()), NULL, NULL);
     temp->prev = exp->tac;
     ret = mk_tac(unop, temp->a, exp->ret, NULL);
     ret->prev = temp;
@@ -88,7 +88,7 @@ EXP *do_bin(int binop, EXP *exp1, EXP *exp2) {
         return exp1; /* The new expression */
     }
 
-    temp = mk_tac(TAC_VAR, new SYM(SYM_UNKNOWN, mk_tmp()), NULL, NULL);
+    temp = mk_tac(TAC_DECLARE, new SYM(SYM_UNKNOWN, mk_tmp()), NULL, NULL);
     temp->prev = join_tac(exp1->tac, exp2->tac);
     ret = mk_tac(binop, temp->a, exp1->ret, exp2->ret);
     ret->prev = temp;
@@ -137,7 +137,7 @@ EXP *do_cmp(int binop, EXP *exp1, EXP *exp2) {
         return exp1; /* The new expression */
     }
 
-    temp = mk_tac(TAC_VAR, new SYM(SYM_UNKNOWN, mk_tmp()), NULL, NULL);
+    temp = mk_tac(TAC_DECLARE, new SYM(SYM_UNKNOWN, mk_tmp()), NULL, NULL);
     temp->prev = join_tac(exp1->tac, exp2->tac);
     ret = mk_tac(binop, temp->a, exp1->ret, exp2->ret);
     ret->prev = temp;
@@ -175,12 +175,12 @@ EXP *do_exp_list(EXP *exps) {
         code = join_tac(code, exps->tac);
         exps = exps->next;
     }
-    if(exps)
+    if (exps)
         ret->tac = code;
     return ret;
 }
 
-EXP *do_call_ret(EXP *obj, const string &func, EXP *arglist) {
+EXP *do_call_ret(EXP *obj, SYM *func, EXP *arglist) {
 
     SYM *ret; /* Where function result will go */
     TAC *code = nullptr; /* Resulting code */
@@ -197,13 +197,13 @@ EXP *do_call_ret(EXP *obj, const string &func, EXP *arglist) {
 
         arglist = arglist->next;
     }
-    code = join_tac(mk_tac(TAC_ACTUAL,obj->ret,NULL,NULL,false),code);
+    code = join_tac(mk_tac(TAC_ACTUAL, obj->ret, NULL, NULL, false), code);
 
     temp = join_tac(do_exp_list(lis)->tac, code);
     ret = new SYM(SYM_UNKNOWN, mk_tmp()); /* For the result */
     code = mk_tac(TAC_TMP, ret, NULL, NULL);
     code->prev = temp;
-    temp = mk_tac(TAC_CALL, ret, obj->ret, new SYM(SYM_SYMBOL, func));
+    temp = mk_tac(TAC_CALL, ret, obj->ret, func);
 
     temp->prev = code;
     code = temp;
@@ -223,6 +223,10 @@ EXP *join_exp(EXP *x, EXP *y) {
 }
 
 void error(const char *str) {
-    fprintf(stderr, "error: %s\n", str);
+    fprintf(stderr, "line %d:  error: %s\n", getyylineno(), str);
     exit(1);
+}
+
+void error(const string &str) {
+    error(str.c_str());
 }

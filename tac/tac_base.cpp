@@ -119,7 +119,7 @@ void tac_print(TAC *i) {
             printf("label %s", i->a->ToStr().c_str());
             break;
 
-        case TAC_VAR:
+        case TAC_DECLARE:
             printf("declare %s %s", i->a->ToStr().c_str(), i->b->ToStr().c_str());
             break;
 

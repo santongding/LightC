@@ -4,14 +4,22 @@
 #include <cstring>
 #include <string>
 #include "tac.hpp"
+#include "Checker.h"
 #include "FlexLexer.h"
 yyFlexLexer lex;
 void yyerror(char* msg);
 int yylex(){
 return lex.yylex();
 }
-int getyylineno(){
-	return lex.lineno();
+
+int user_lineno = -1;
+int getyylineno() {
+    if (user_lineno != -1)return user_lineno;
+    return lex.lineno();
+}
+
+void setyylineno(int l) {
+    user_lineno = l;
 }
 
 %}
@@ -36,7 +44,7 @@ int getyylineno(){
 %right UMINUS
 %nonassoc '(' ')'
 %left '.'
-%type <sym> type_id
+%type <sym> type_id identifier
 %type <sym> type
 %type <exp> expression_list expression
 %type <tac> expression_statement return_statement declare_statement if_statement while_statement statement_list statement block
@@ -56,7 +64,7 @@ classes:class| classes class{
 	$$=join_tac($1,$2);
 }
 
-class:CLASS IDENTIFIER '{' class_members '}'{
+class:CLASS identifier '{' class_members '}'{
 	$$=mk_class($2,$4);
 }
 class_members:class_member|class_members class_member{
@@ -64,8 +72,12 @@ class_members:class_member|class_members class_member{
 }
 class_member:function|declare_statement;
 
-function:type IDENTIFIER '(' params ')' block{
+function:type identifier '(' params ')' block{
 	$$=mk_func($1,$2,$4,$6);
+}
+identifier:IDENTIFIER{
+	typeManager.RecordIdentifier($1);
+	$$=new SYM(SYM_SYMBOL,$1);
 }
 
 params:{
@@ -75,8 +87,8 @@ $$=NULL;
 |params ',' param{
 	$$=join_tac($1,$3);
 }
-param:type IDENTIFIER{
-	$$=mk_tac(TAC_FORMAL,$1,new SYM(SYM_SYMBOL,$2),NULL,true);
+param:type identifier{
+	$$=mk_tac(TAC_FORMAL,$1,$2,NULL,true);
 }
 
 block:'{' statement_list '}'{
@@ -98,11 +110,12 @@ statement:expression_statement
 |while_statement;
 |declare_statement;
 
-type_id:IDENTIFIER{
-	$$=new SYM(SYM_TYPE,$1);
+type_id:identifier{
+
+	$$=$1->Cast<SYM_TYPE>();
 };
 /*
-| type_id ':' IDENTIFIER{
+| type_id ':' identifier{
 	$$ =  new SYM(SYM_TYPE,$1->ToStr()+":"+$3);
 }*/
 
@@ -119,7 +132,7 @@ type:type_id{
 	$$ = new SYM(SYM_TYPE,"link|"+$2->ToStr());
 }
 
-declare_statement:type IDENTIFIER ';'{
+declare_statement:type identifier ';'{
 	$$ = declare($1,$2);
 };
 
@@ -227,11 +240,11 @@ expression : expression '=' expression {
 {
 	$$=mk_exp(NULL, mk_const(atoi($1)), NULL);
 }
-| IDENTIFIER
+| identifier
 {
-	$$=mk_exp(NULL,new SYM(SYM_SYMBOL,$1),NULL);
+	$$=mk_exp(NULL,$1,NULL);
 }
-| expression '.' IDENTIFIER '(' expression_list ')'
+| expression '.' identifier '(' expression_list ')'
 {
 	$$=do_call_ret($1,$3,$5);
 }
@@ -283,6 +296,7 @@ int main(int argc,   char *argv[])
 	tac_init();
 
 	yyparse();
+	CheckTac(tac_first);
 	tac_dump();
 
 	return 0;

@@ -37,7 +37,7 @@ enum SymbolType {
 #define TAC_BEGINFUNC 15 /* function begin */
 #define TAC_ENDFUNC 16 /* function end */
 #define TAC_LABEL 17 /* label a */
-#define TAC_VAR 18 /* int a */
+#define TAC_DECLARE 18 /* int a */
 #define TAC_FORMAL 19 /* formal a */
 #define TAC_ACTUAL 20 /* actual a */
 #define TAC_CALL 21 /* a=call b */
@@ -76,6 +76,14 @@ public:
         return _name;
     }
 
+    template<SymbolType T>
+    SYM *Cast() {
+        if (T == SYM_CONST) {
+            assert(!IsConst());
+        }
+        _type = T;
+    }
+
     int &GetValue() {
         assert(IsConst());
         return _value;
@@ -110,12 +118,14 @@ typedef struct exp /* Parser expression */
     SYM *ret; /* Where the result is */
 } EXP;
 
+
 /* global var */
 extern int next_tmp, next_label;
 extern TAC *tac_first, *tac_last;
 
 int getyylineno();
 
+void setyylineno(int l);
 /* function */
 void tac_init();
 
@@ -146,7 +156,7 @@ EXP *do_cmp(int binop, EXP *exp1, EXP *exp2);
 
 EXP *do_locate(EXP *x, EXP *y);
 
-EXP *do_call_ret(EXP *obj, const string &func, EXP *arglist);
+EXP *do_call_ret(EXP *obj, SYM *func, EXP *arglist);
 
 EXP *do_exp_list(EXP *exps);
 
@@ -156,14 +166,16 @@ TAC *mk_block(TAC *x);
 
 void error(const char *str);
 
+void error(const string &str);
+
 TAC *do_test(EXP *exp, TAC *stmt1, TAC *stmt2);
 
 TAC *do_while(EXP *exp, TAC *stmt);
 
-TAC *declare(SYM *type, const string &name);
+TAC *declare(SYM *type, SYM *name);
 
-TAC *mk_func(SYM *type, const string &name, TAC *tac, TAC *block);
+TAC *mk_func(SYM *type, SYM *name, TAC *tac, TAC *block);
 
-TAC *mk_class(const string &name, TAC *tac);
+TAC *mk_class(SYM *name, TAC *tac);
 
 #endif //LIGHTC_TAC_HPP

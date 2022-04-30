@@ -8,6 +8,8 @@ add_library(${PROJECT_NAME}_lib STATIC
         tac/tac_base.cpp
         tac/tac_block.cpp
         tac/tac_func.cpp
+        checker/Checker.cpp
+        checker/TypeManager.cpp
         )
 
 add_executable(LightC ${PROJECT_SOURCE_DIR}/bison/bison.cpp )
