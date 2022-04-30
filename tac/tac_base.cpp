@@ -27,7 +27,12 @@ void tac_complete() {
 int lastline = -1;
 
 void tac_print(TAC *i) {
-    if (i->linenum != lastline && i->linenum >= 0) {
+    if (i->linenum < 0) {
+        if (lastline < 0)i->linenum = 1;
+        else
+            i->linenum = lastline;
+    }
+    if (i->linenum != lastline) {
         printf("/.............line:%04d............/\n", i->linenum);
         lastline = i->linenum;
     }
@@ -115,7 +120,7 @@ void tac_print(TAC *i) {
             break;
 
         case TAC_VAR:
-            printf("var %s", i->a->ToStr().c_str());
+            printf("declare %s %s", i->a->ToStr().c_str(), i->b->ToStr().c_str());
             break;
 
         case TAC_BEGINFUNC:

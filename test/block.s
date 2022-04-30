@@ -1,3 +1,4 @@
+/.............line:0001............/
 block begin:
 /.............line:0002............/
 a = 3
@@ -39,4 +40,10 @@ label label6
 ifz x goto label7
 goto label6
 label label7
+/.............line:0023............/
+declare link|intdsa:as a
+/.............line:0024............/
+declare int| a
+/.............line:0025............/
+declare ref|sad b
 block end

@@ -19,5 +19,9 @@ if(a=3){}else{}
 
            while(x){
            }
+
+        link intdsa:as a;
+        int a;
+        sad b;
 }
 

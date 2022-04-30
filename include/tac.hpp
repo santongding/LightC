@@ -157,4 +157,6 @@ TAC *do_test(EXP *exp, TAC *stmt1, TAC *stmt2);
 
 TAC *do_while(EXP *exp, TAC *stmt);
 
+TAC * declare(SYM * type,const string & name);
+
 #endif //LIGHTC_TAC_HPP

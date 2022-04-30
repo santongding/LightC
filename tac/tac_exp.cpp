@@ -175,7 +175,8 @@ EXP *do_exp_list(EXP *exps) {
         code = join_tac(code, exps->tac);
         exps = exps->next;
     }
-    ret->tac = code;
+    if(exps)
+        ret->tac = code;
     return ret;
 }
 

@@ -36,10 +36,10 @@ int getyylineno(){
 %right UMINUS
 %nonassoc '(' ')'
 %left '.'
-
-
+%type <sym> type_id
+%type <sym> type
 %type <exp> expression_list expression
-%type <tac> expression_statement return_statement if_statement while_statement statement_list statement block program
+%type <tac> expression_statement return_statement declare_statement if_statement while_statement statement_list statement block program
 /*
 %type <tac>declaration_statement return_statement if_statement while_statement statement statement_list block
 %type<tac> class_declarations class_declaration member_declarations member_declaration function parameter parameter_list
@@ -68,6 +68,28 @@ statement:expression_statement
 |return_statement
 |if_statement;
 |while_statement;
+|declare_statement;
+
+type_id:IDENTIFIER{
+	$$=new SYM(SYM_TYPE,$1);
+}
+| type_id ':' IDENTIFIER{
+	$$ =  new SYM(SYM_TYPE,$1->ToStr()+":"+$3);
+}
+
+type:type_id{
+	$$ = new SYM(SYM_TYPE,"ref|"+$1->ToStr());
+}
+| INT{
+ 	$$= new SYM(SYM_TYPE,"int|");
+}
+| LINK type_id{
+	$$ = new SYM(SYM_TYPE,"link|"+$2->ToStr());
+}
+
+declare_statement:type IDENTIFIER ';'{
+	$$ = declare($1,$2);
+};
 
 
 while_statement : WHILE '(' expression ')' block
@@ -98,7 +120,10 @@ return_statement:RETURN ';'{
 
 expression_statement : expression_list ';'
 {
+	auto tp =do_exp_list($1);
+	if(tp)
 	$$ = do_exp_list($1)->tac;
+	else $$ = NULL;
 }
 ;
 
