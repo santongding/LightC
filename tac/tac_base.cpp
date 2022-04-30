@@ -102,7 +102,7 @@ void tac_print(TAC *i) {
             break;
 
         case TAC_FORMAL:
-            printf("formal %s", i->a->ToStr().c_str());
+            printf("formal %s %s", i->a->ToStr().c_str(),i->b->ToStr().c_str());
             break;
 
         case TAC_CALL:
@@ -124,11 +124,11 @@ void tac_print(TAC *i) {
             break;
 
         case TAC_BEGINFUNC:
-            printf("begin");
+            printf("begin func: %s %s",i->a->ToStr().c_str(), i->b->ToStr().c_str());
             break;
 
         case TAC_ENDFUNC:
-            printf("end");
+            printf("end func");
             break;
 
         case TAC_DECLARE_AND_LOCATE:

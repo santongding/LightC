@@ -197,12 +197,13 @@ EXP *do_call_ret(EXP *obj, const string &func, EXP *arglist) {
 
         arglist = arglist->next;
     };
+    code = join_tac(mk_tac(TAC_ACTUAL,obj->ret,NULL,NULL,false),code);
 
     temp = join_tac(do_exp_list(lis)->tac, code);
     ret = new SYM(SYM_UNKNOWN, mk_tmp()); /* For the result */
     code = mk_tac(TAC_TMP, ret, NULL, NULL);
     code->prev = temp;
-    temp = mk_tac(TAC_CALL, ret, obj->ret, new SYM(SYM_LINK, func));
+    temp = mk_tac(TAC_CALL, ret, obj->ret, new SYM(SYM_SYMBOL, func));
 
     temp->prev = code;
     code = temp;

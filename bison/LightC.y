@@ -25,7 +25,7 @@ int getyylineno(){
 	EXP *exp;
 }
 
-%token INT EQ NE LT LE GT GE UMINUS IF THEN ELSE FI WHILE DO DONE CONTINUE FUNC PRINT RETURN CLASS LINK
+%token INT EQ NE LT LE GT GE UMINUS IF THEN ELSE FI WHILE DO DONE CONTINUE FUNC PRINT RETURN CLASS LINK VOID
 %token <string> INTEGER IDENTIFIER TEXT
 
 %right '='
@@ -39,16 +39,29 @@ int getyylineno(){
 %type <sym> type_id
 %type <sym> type
 %type <exp> expression_list expression
-%type <tac> expression_statement return_statement declare_statement if_statement while_statement statement_list statement block program
+%type <tac> expression_statement return_statement declare_statement if_statement while_statement statement_list statement block
+%type <tac> function params param program
 /*
 %type <tac>declaration_statement return_statement if_statement while_statement statement statement_list block
 %type<tac> class_declarations class_declaration member_declarations member_declaration function parameter parameter_list
 %type<tac> program*/
 %%
 
-program:block{
+program:function{
 	tac_last=$1;
 	tac_complete();
+}
+
+function:type IDENTIFIER '(' params ')' block{
+	$$=mk_func($1,$2,$4,$6);
+}
+
+params:param
+|params ',' param{
+	$$=join_tac($1,$3);
+}
+param:type IDENTIFIER{
+	$$=mk_tac(TAC_FORMAL,$1,new SYM(SYM_SYMBOL,$2),NULL,true);
 }
 
 block:'{' statement_list '}'{
@@ -82,6 +95,9 @@ type:type_id{
 }
 | INT{
  	$$= new SYM(SYM_TYPE,"int|");
+}
+| VOID {
+ 	$$= new SYM(SYM_TYPE,"void|");
 }
 | LINK type_id{
 	$$ = new SYM(SYM_TYPE,"link|"+$2->ToStr());
@@ -197,7 +213,7 @@ expression : expression '=' expression {
 }
 | IDENTIFIER
 {
-	$$=mk_exp(NULL,new SYM(SYM_LINK,$1),NULL);
+	$$=mk_exp(NULL,new SYM(SYM_SYMBOL,$1),NULL);
 }
 | expression '.' IDENTIFIER '(' expression_list ')'
 {

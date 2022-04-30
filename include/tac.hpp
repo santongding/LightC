@@ -14,6 +14,7 @@ enum SymbolType {
     SYM_CONST = 4,
     SYM_TYPE =5,
     SYM_LABEL =6,
+    SYM_SYMBOL = 7
 
 };
 
@@ -158,5 +159,7 @@ TAC *do_test(EXP *exp, TAC *stmt1, TAC *stmt2);
 TAC *do_while(EXP *exp, TAC *stmt);
 
 TAC * declare(SYM * type,const string & name);
+
+TAC * mk_func(SYM *type,const string & name,TAC *tac,TAC *block);
 
 #endif //LIGHTC_TAC_HPP

@@ -7,6 +7,7 @@ add_library(${PROJECT_NAME}_lib STATIC
         tac/tac_exp.cpp
         tac/tac_base.cpp
         tac/tac_block.cpp
+        tac/tac_func.cpp
         )
 
 add_executable(LightC ${PROJECT_SOURCE_DIR}/bison/bison.cpp )

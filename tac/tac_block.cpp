@@ -56,5 +56,5 @@ TAC *do_while(EXP *exp, TAC *stmt) {
 }
 
 TAC * declare(SYM * type,const string & name){
-    return mk_tac(TAC_VAR,type,new SYM(SYM_LINK,name),NULL, true);
+    return mk_tac(TAC_VAR,type,new SYM(SYM_SYMBOL,name),NULL, true);
 }
