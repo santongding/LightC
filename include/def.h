@@ -8,15 +8,13 @@
 enum STATUS{
     OK,
     SYMBOL_REPEAT,
-    VOID_FORBID,
     SYMBOL_UNDEFINED
 };
 enum VALUE_TYPE{
 
     LINK_V = 1,
-    VOID_V = 2,
-    INT_V = 3,
-    REF_V = 4
+    INT_V = 2,
+    REF_V = 3
 };
 
 

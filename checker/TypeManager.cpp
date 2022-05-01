@@ -44,7 +44,7 @@ TypeInfo::TypeInfo(VALUE_TYPE t, int n) {
 TypeInfo::TypeInfo(VALUE_TYPE t) {
     type_name = 0;
     type = t;
-    assert(t == VOID_V || t == INT_V);
+    assert(t == INT_V);
 }
 
 template<VALUE_TYPE T>
@@ -54,9 +54,7 @@ bool TypeInfo::Is() const {
 
 string TypeInfo::Format(IdentifierMap *idMap) {
     std::stringstream stringstream;
-    if (type == VOID_V) {
-        return "[void]";
-    } else if (type == INT_V) {
+    if (type == INT_V) {
         return "[int]";
     } else {
         stringstream << "[";
@@ -74,10 +72,7 @@ ClassInfo::ClassInfo(const int name) {
 }
 
 STATUS ClassInfo::DeclareMember(const int name, const TypeInfo &type) {
-    if (type.Is<VOID_V>()) {
-        return VOID_FORBID;
-    }
-    if (membersType.find(name) == membersType.end()&&funcs.find(name)==funcs.end()) {
+    if (membersType.find(name) == membersType.end() && funcs.find(name) == funcs.end()) {
         membersOrder.push_back(name);
         membersType[name] = type;
         return OK;
@@ -88,10 +83,10 @@ STATUS ClassInfo::DeclareMember(const int name, const TypeInfo &type) {
 
 
 STATUS ClassInfo::DeclareFunc(const int name, TAC *formals, int formalNum, TAC *ret) {
-    if (membersType.find(name) == membersType.end()&&funcs.find(name)==funcs.end()){
+    if (membersType.find(name) == membersType.end() && funcs.find(name) == funcs.end()) {
         funcs[name] = FuncInfo();
         return OK;
-    }else{
+    } else {
         return SYMBOL_REPEAT;
     }
 }
@@ -123,11 +118,7 @@ STATUS TypeManager::TryDecodeType(const string &ts, TypeInfo &type) {
     auto pos = ts.find_first_of("|");
     assert(pos < ts.length());
     auto tt = ts.substr(0, pos);
-    if (tt == "void") {
-        assert(pos == ts.length() - 1);
-        type = TypeInfo(VOID_V);
-        return OK;
-    } else if (tt == "int") { ;
+    if (tt == "int") { ;
         assert(pos == ts.length() - 1);
         type = TypeInfo(INT_V);
         return OK;
