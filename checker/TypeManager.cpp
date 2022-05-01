@@ -77,12 +77,21 @@ STATUS ClassInfo::DeclareMember(const int name, const TypeInfo &type) {
     if (type.Is<VOID_V>()) {
         return VOID_FORBID;
     }
-    if (membersType.find(name) == membersType.end()) {
-
+    if (membersType.find(name) == membersType.end()&&funcs.find(name)==funcs.end()) {
         membersOrder.push_back(name);
         membersType[name] = type;
         return OK;
     } else {
+        return SYMBOL_REPEAT;
+    }
+}
+
+
+STATUS ClassInfo::DeclareFunc(const int name, TAC *formals, int formalNum, TAC *ret) {
+    if (membersType.find(name) == membersType.end()&&funcs.find(name)==funcs.end()){
+        funcs[name] = FuncInfo();
+        return OK;
+    }else{
         return SYMBOL_REPEAT;
     }
 }
@@ -158,6 +167,13 @@ STATUS TypeManager::DeclareMember(const string &name, const string &mem, const s
     }
     return classes[idMap.itn(name)]->DeclareMember(idMap.itn(mem), t);
 
+}
+
+
+STATUS TypeManager::DeclareFunc(const string &name, const string &funcname, TAC *formals, int formalNum, TAC *ret) {
+    assert(classes.find(idMap.itn(name)) != classes.end());
+
+    return classes[idMap.itn(name)]->DeclareFunc(idMap.itn(funcname), formals, formalNum, ret);
 }
 
 void TypeManager::Print() {

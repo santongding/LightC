@@ -7,7 +7,7 @@
 %option noyywrap
 
 %%
-"void" { return VOID;}
+
 "link" { return LINK; }
 "class" { return CLASS; }
 

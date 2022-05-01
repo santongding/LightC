@@ -174,6 +174,8 @@ TAC *do_while(EXP *exp, TAC *stmt);
 
 TAC *declare(SYM *type, SYM *name);
 
+TAC *declare_link(SYM *type, SYM *name);
+
 TAC *mk_func(SYM *type, SYM *name, TAC *tac, TAC *block);
 
 TAC *mk_class(SYM *name, TAC *tac);

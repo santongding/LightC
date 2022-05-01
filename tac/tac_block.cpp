@@ -58,3 +58,12 @@ TAC *do_while(EXP *exp, TAC *stmt) {
 TAC *declare(SYM *type, SYM *name) {
     return mk_tac(TAC_DECLARE, type, name, NULL, true);
 }
+
+
+TAC *declare_link(SYM *type, SYM *name) {
+    if(string("ref")!=type->ToStr().substr(0,type->ToStr().find_first_of('|'))){
+        error("cannot link to a non-ref variable");
+    }
+
+    return mk_tac(TAC_DECLARE, type, name, NULL, true);
+}

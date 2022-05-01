@@ -33,7 +33,7 @@ void setyylineno(int l) {
 	EXP *exp;
 }
 
-%token INT EQ NE LT LE GT GE UMINUS IF THEN ELSE FI WHILE DO DONE CONTINUE FUNC PRINT RETURN CLASS LINK VOID
+%token INT EQ NE LT LE GT GE UMINUS IF THEN ELSE FI WHILE DO DONE CONTINUE FUNC PRINT RETURN CLASS LINK
 %token <string> INTEGER IDENTIFIER TEXT
 
 %right '='
@@ -45,9 +45,9 @@ void setyylineno(int l) {
 %nonassoc '(' ')'
 %left '.'
 %type <sym> type_id identifier
-%type <sym> type
+%type <sym> var_type
 %type <exp> expression_list expression
-%type <tac> expression_statement return_statement declare_statement if_statement while_statement statement_list statement block
+%type <tac> expression_statement return_statement member_declare_statement declare_statement if_statement while_statement statement_list statement block
 %type <tac> function params param program class classes class_member class_members
 /*
 %type <tac>declaration_statement return_statement if_statement while_statement statement statement_list block
@@ -70,9 +70,9 @@ class:CLASS identifier '{' class_members '}'{
 class_members:class_member|class_members class_member{
 	$$=join_tac($1,$2);
 }
-class_member:function|declare_statement;
+class_member:function|member_declare_statement;
 
-function:type identifier '(' params ')' block{
+function:var_type identifier '(' params ')' block{
 	$$=mk_func($1,$2,$4,$6);
 }
 identifier:IDENTIFIER{
@@ -87,7 +87,7 @@ $$=NULL;
 |params ',' param{
 	$$=join_tac($1,$3);
 }
-param:type identifier{
+param:var_type identifier{
 	$$=mk_tac(TAC_FORMAL,$1,$2,NULL,true);
 }
 
@@ -119,20 +119,23 @@ type_id:identifier{
 	$$ =  new SYM(SYM_TYPE,$1->ToStr()+":"+$3);
 }*/
 
-type:type_id{
-	$$ = new SYM(SYM_TYPE,"ref|"+$1->ToStr());
+
+var_type:type_id{
+$$ = new SYM(SYM_TYPE,"ref|"+$1->ToStr());
 }
 | INT{
- 	$$= new SYM(SYM_TYPE,"int|");
-}
-| VOID {
- 	$$= new SYM(SYM_TYPE,"void|");
-}
-| LINK type_id{
-	$$ = new SYM(SYM_TYPE,"link|"+$2->ToStr());
+$$= new SYM(SYM_TYPE,"int|");
 }
 
-declare_statement:type identifier ';'{
+member_declare_statement:var_type identifier ';'{
+	$$ = declare($1,$2);
+}
+|LINK var_type identifier ';'{
+	$$ = declare_link($2,$3);
+}
+;
+
+declare_statement:var_type identifier ';'{
 	$$ = declare($1,$2);
 };
 
@@ -153,11 +156,13 @@ if_statement : IF '(' expression ')' block
 }
 ;
 
-return_statement:RETURN ';'{
+return_statement:
+/*RETURN ';'{
 		TAC *t=mk_tac(TAC_RETURN, NULL, NULL, NULL,true);
         	$$=t;
 }
-| RETURN expression ';'{
+|*/
+RETURN expression ';'{
 		TAC *t=mk_tac(TAC_RETURN, $2->ret, NULL, NULL,true);
         	t->prev=$2->tac;
         	$$=t;

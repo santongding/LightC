@@ -31,7 +31,6 @@ class test {
         while (x) {
         }
 
-        link
         intdsaas a;
         int a;
         sad b;
@@ -41,7 +40,7 @@ class test {
 
     int a;
     int b;
-    a dsa;
+    link a dsa;
 
     void func() {
         if (a) {
@@ -50,7 +49,7 @@ class test {
             c = 2;
         }
         while (b) {
-
+            return 2;
         }
     }
 }

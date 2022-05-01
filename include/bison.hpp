@@ -75,10 +75,9 @@ extern int yydebug;
     RETURN = 276,                  /* RETURN  */
     CLASS = 277,                   /* CLASS  */
     LINK = 278,                    /* LINK  */
-    VOID = 279,                    /* VOID  */
-    INTEGER = 280,                 /* INTEGER  */
-    IDENTIFIER = 281,              /* IDENTIFIER  */
-    TEXT = 282                     /* TEXT  */
+    INTEGER = 279,                 /* INTEGER  */
+    IDENTIFIER = 280,              /* IDENTIFIER  */
+    TEXT = 281                     /* TEXT  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -108,10 +107,9 @@ extern int yydebug;
 #define RETURN 276
 #define CLASS 277
 #define LINK 278
-#define VOID 279
-#define INTEGER 280
-#define IDENTIFIER 281
-#define TEXT 282
+#define INTEGER 279
+#define IDENTIFIER 280
+#define TEXT 281
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -125,7 +123,7 @@ union YYSTYPE
 	TAC *tac;
 	EXP *exp;
 
-#line 129 "bison.hpp"
+#line 127 "bison.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

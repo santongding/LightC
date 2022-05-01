@@ -33,6 +33,7 @@ public:
     void Init();
 };
 
+
 class TypeInfo {
 
 public:
@@ -53,6 +54,13 @@ private:
 
 };
 
+class FuncInfo{
+public:
+    FuncInfo()=default;
+private:
+    TypeInfo retType;
+    vector<TypeInfo> argsType;
+};
 
 class ClassInfo {
 public:
@@ -60,11 +68,15 @@ public:
 
     STATUS DeclareMember(const int name, const TypeInfo &type);
 
+    STATUS DeclareFunc(const int name,TAC * formals,int formalNum,TAC * ret);
+
+
     string Format(IdentifierMap *idMap);
 
 private:
     vector<int>membersOrder;
-    std::unordered_map<int, TypeInfo> membersType;
+    std::unordered_map<int,TypeInfo> membersType;
+    std::unordered_map<int,FuncInfo> funcs;
     int className;
 };
 
@@ -81,6 +93,8 @@ public:
     STATUS DeclareClass(const string &name);
 
     STATUS DeclareMember(const string &name, const string &mem, const string &type);
+
+    STATUS DeclareFunc(const string &name,const string &funcname,TAC * formals,int formalNum,TAC * ret);
 
     void Print();
 

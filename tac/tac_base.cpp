@@ -110,9 +110,9 @@ void tac_print(TAC *i) {
             break;
 
         case TAC_RETURN:
-            if (i->a != NULL)
+           // if (i->a != NULL)
                 printf("return %s", i->a->ToStr().c_str());
-            else printf("return");
+           // else printf("return");
             break;
 
         case TAC_LABEL:
