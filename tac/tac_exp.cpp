@@ -201,7 +201,7 @@ EXP *do_call_ret(EXP *obj, SYM *func, EXP *arglist) {
 
     temp = join_tac(do_exp_list(lis)->tac, code);
     ret = new SYM(SYM_UNKNOWN, mk_tmp()); /* For the result */
-    code = mk_tac(TAC_TMP, ret, NULL, NULL);
+    code = mk_tac(TAC_RETVALUE, ret, NULL, NULL);
     code->prev = temp;
     temp = mk_tac(TAC_CALL, ret, obj->ret, func);
 

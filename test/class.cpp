@@ -1,6 +1,6 @@
 class a{
     test b;
-    void v;
+    int hu;
     link test c;
     link test bc;
 }
@@ -35,12 +35,13 @@ class test {
         intdsaas a;
         int a;
         sad b;
+        x.y.z=a.b.c(213,AS);
     }
 
 
     int a;
     int b;
-    val c;
+    a dsa;
 
     void func() {
         if (a) {

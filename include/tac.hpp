@@ -45,7 +45,7 @@ enum SymbolType {
 #define TAC_BEGINCLASS 23 /*class begin*/
 #define TAC_ENDCLASS 24 /*class end*/
 #define TAC_DECLARE_AND_LOCATE 25
-#define TAC_TMP 26 /* tmp a */
+#define TAC_RETVALUE 26 /* tmp a */
 #define TAC_BEGINBLOCK 27
 #define TAC_ENDBLOCK 28
 

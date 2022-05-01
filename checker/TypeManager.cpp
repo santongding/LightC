@@ -110,24 +110,31 @@ void TypeManager::RecordIdentifier(const string &s) {
     idMap.RecordIdentifier(s);
 }
 
-TypeInfo TypeManager::DecodeType(const string &ts) {
+STATUS TypeManager::TryDecodeType(const string &ts, TypeInfo &type) {
     auto pos = ts.find_first_of("|");
     assert(pos < ts.length());
     auto tt = ts.substr(0, pos);
     if (tt == "void") {
         assert(pos == ts.length() - 1);
-        return TypeInfo(VOID_V);
+        type = TypeInfo(VOID_V);
+        return OK;
     } else if (tt == "int") { ;
         assert(pos == ts.length() - 1);
-        return TypeInfo(INT_V);
-    } else if (tt == "ref") {
-        assert(pos < ts.length() - 1);
-        return TypeInfo(REF_V, idMap.itn(ts.substr(pos + 1)));
-    } else if (tt == "link") {
-        assert(pos < ts.length() - 1);
-        return TypeInfo(LINK_V, idMap.itn(ts.substr(pos + 1)));
+        type = TypeInfo(INT_V);
+        return OK;
     } else {
-        error("wrong value type");
+        assert(pos < ts.length() - 1);
+        if (classes.find(idMap.itn(ts.substr(pos + 1))) == classes.end()) {
+            return SYMBOL_UNDEFINED;
+        }
+        if (tt == "ref") {
+            type = TypeInfo(REF_V, idMap.itn(ts.substr(pos + 1)));
+        } else if (tt == "link") {
+            type = TypeInfo(LINK_V, idMap.itn(ts.substr(pos + 1)));
+        } else {
+            error("wrong value type");
+        }
+        return OK;
     }
 }
 
@@ -144,7 +151,12 @@ STATUS TypeManager::DeclareClass(const string &name) {
 STATUS TypeManager::DeclareMember(const string &name, const string &mem, const string &type) {
     assert(classes.find(idMap.itn(name)) != classes.end());
 
-    return classes[idMap.itn(name)]->DeclareMember(idMap.itn(mem), DecodeType(type));
+    TypeInfo t;
+    auto sts = TryDecodeType(type, t);
+    if (sts != OK) {
+        return sts;
+    }
+    return classes[idMap.itn(name)]->DeclareMember(idMap.itn(mem), t);
 
 }
 

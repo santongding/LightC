@@ -10,10 +10,25 @@ TypeManager typeManager;
 
 void CheckTac(const TAC *tac) {
     setyylineno(1);
-    int scope = 0;//0 for global, 1 for class, 2 for func
 
     typeManager.Init();
+    for (const TAC *now = tac; now; now = now->next) {
+        if (now->linenum > 0) {
+            setyylineno(now->linenum);
+        }
+        if (now->op == TAC_BEGINCLASS) {
+            auto sts = typeManager.DeclareClass(now->a->ToStr());
+            if (sts != OK) {
+                error("type conflict: " + std::to_string(sts));
+            }
+        }
+    }
+
+
+    int scope = 0;//0 for global, 1 for class, 2 for func
     string lstClass;
+    setyylineno(1);
+
     for (const TAC *now = tac; now; now = now->next) {
         if (now->linenum > 0) {
             setyylineno(now->linenum);
@@ -21,7 +36,7 @@ void CheckTac(const TAC *tac) {
         if (now->op == TAC_BEGINCLASS) {
             assert(scope == 0);
             scope = 1;
-            typeManager.DeclareClass(lstClass = now->a->ToStr());
+            lstClass = now->a->ToStr();
 
         } else if (now->op == TAC_ENDCLASS) {
             assert(scope == 1);
@@ -36,7 +51,7 @@ void CheckTac(const TAC *tac) {
             if (scope == 1) {
                 auto sts = typeManager.DeclareMember(lstClass, now->b->ToStr(), now->a->ToStr());
                 if (sts != OK) {
-                    error("type conficct: " + std::to_string(sts));
+                    error("type conflict: " + std::to_string(sts));
                 }
             }
         }

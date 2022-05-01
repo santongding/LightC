@@ -139,10 +139,10 @@ void tac_print(TAC *i) {
             printf("end class");
             break;
         case TAC_DECLARE_AND_LOCATE:
-            printf("tmp %s = %s -> %s", i->a->ToStr().c_str(), i->b->ToStr().c_str(), i->c->ToStr().c_str());
+            printf("pointer %s = %s -> %s", i->a->ToStr().c_str(), i->b->ToStr().c_str(), i->c->ToStr().c_str());
             break;
-        case TAC_TMP:
-            printf("tmp %s", i->a->ToStr().c_str());
+        case TAC_RETVALUE:
+            printf("ret value %s", i->a->ToStr().c_str());
             break;
         case TAC_BEGINBLOCK:
             printf("block begin:");

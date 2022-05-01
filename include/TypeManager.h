@@ -76,7 +76,7 @@ public:
 
     void RecordIdentifier(const string &s);
 
-    TypeInfo DecodeType(const string &ts);
+    STATUS TryDecodeType(const string &ts, TypeInfo & type);
 
     STATUS DeclareClass(const string &name);
 

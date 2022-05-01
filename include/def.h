@@ -8,7 +8,8 @@
 enum STATUS{
     OK,
     SYMBOL_REPEAT,
-    VOID_FORBID
+    VOID_FORBID,
+    SYMBOL_UNDEFINED
 };
 enum VALUE_TYPE{
 
