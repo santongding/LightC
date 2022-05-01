@@ -7,7 +7,7 @@
 %option noyywrap
 
 %%
-
+"new" {return NEW;}
 "link" { return LINK; }
 "class" { return CLASS; }
 

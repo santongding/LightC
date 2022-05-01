@@ -2,43 +2,38 @@
 begin class: a
 /.............line:0002............/
 declare link|b x
-begin func.cpp: ref|a fa
-formal ref| this
 /.............line:0003............/
-formal ref|a x
-formal ref|b y
+declare link|a x
+begin func: ref|b func
 block begin:
+formal ref| this
+/.............line:0004............/
+formal int| i
+formal ref|b a
+declare ref| t0
 /.............line:0005............/
-declare pointer|any| t0
-t0 = this -> x
+t0 = a -> b
 declare ref| t1
-t1 = x + y
-declare pointer|any| t2
-t2 = t1 -> b
-t0 = t2
+t1 = t0 + 1
+y -> x bind with t1
+declare ref| t2
+t2 = y -> x
+declare ref| t3
+t3 = t2 -> a
+declare ref| t4
+t4 = t3 -> b
+declare ref| t5
 /.............line:0006............/
-declare pointer|any| t3
-t3 = y -> x
-declare pointer|any| t4
-t4 = y -> x
-declare pointer|any| t5
-t5 = x -> y
-t4 = t5
-t3 = t4
-actual this
-/.............line:0007............/
-declare any| t6
-t6 = call this -> f
-/.............line:0011............/
-return 1
+t5 = y -> z
+x -> y bind with t5
+declare ref| t6
+t6 = x -> y
+a -> b bind with t6
+declare ref| t7
+t7 = a -> b
+t7 -> x bind with 1
 block end
-end func.cpp
+end func
 end class
 begin class: b
 end class
-b<2>:
-
-a<1>:
-	[link b<2>] x<3>
-	fa<4>: ([a<1>] x, [b<2>] y) -> [a<1>]
-

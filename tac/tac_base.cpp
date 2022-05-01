@@ -89,6 +89,10 @@ void tac_print(TAC *i) {
             printf("%s = %s", i->a->ToStr().c_str(), i->b->ToStr().c_str());
             break;
 
+        case TAC_BIND:
+            printf("%s -> %s bind with %s", i->a->ToStr().c_str(), i->b->ToStr().c_str(), i->c->ToStr().c_str());
+            break;
+
         case TAC_GOTO:
             printf("goto %s", i->a->ToStr().c_str());
             break;
@@ -110,9 +114,9 @@ void tac_print(TAC *i) {
             break;
 
         case TAC_RETURN:
-           // if (i->a != NULL)
-                printf("return %s", i->a->ToStr().c_str());
-           // else printf("return");
+            // if (i->a != NULL)
+            printf("return %s", i->a->ToStr().c_str());
+            // else printf("return");
             break;
 
         case TAC_LABEL:
@@ -124,11 +128,11 @@ void tac_print(TAC *i) {
             break;
 
         case TAC_BEGINFUNC:
-            printf("begin func.cpp: %s %s", i->a->ToStr().c_str(), i->b->ToStr().c_str());
+            printf("begin func: %s %s", i->a->ToStr().c_str(), i->b->ToStr().c_str());
             break;
 
         case TAC_ENDFUNC:
-            printf("end func.cpp");
+            printf("end func");
             break;
 
         case TAC_BEGINCLASS:
@@ -146,6 +150,9 @@ void tac_print(TAC *i) {
             break;
         case TAC_ENDBLOCK:
             printf("block end");
+            break;
+        case TAC_NEW:
+            printf("new %s %s\n", i->a->ToStr().c_str(), i->b->ToStr().c_str());
             break;
         default:
 

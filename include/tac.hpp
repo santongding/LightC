@@ -8,13 +8,11 @@ using std::string;
 /* type of symbol */
 enum SymbolType {
     SYM_UNKNOWN = 0,
-    SYM_REF = 1,
-    SYM_LINK = 2,
-    SYM_VAR = 3,
-    SYM_CONST = 4,
-    SYM_TYPE = 5,
-    SYM_LABEL = 6,
-    SYM_SYMBOL = 7
+    SYM_REF = 1,//value format: name = "x->y"
+    SYM_CONST = 2,//value format: value = 233
+    SYM_TYPE = 3,//value format: int| / ref|xxx / link|xxx
+    SYM_LABEL = 4,//value format: name = "l2"
+    SYM_SYMBOL = 5//value format: name = "adsdas"
 
 };
 
@@ -47,6 +45,8 @@ enum SymbolType {
 #define TAC_LOCATE 25
 #define TAC_BEGINBLOCK 26
 #define TAC_ENDBLOCK 27
+#define TAC_NEW 28
+#define TAC_BIND 29
 
 /* struct */
 class SYM {
@@ -92,6 +92,11 @@ public:
         return _type == SYM_CONST;
     }
 
+    template<SymbolType T>
+    bool Is() const {
+        return T == _type;
+    }
+
 
 private:
     SymbolType _type;
@@ -125,6 +130,7 @@ extern TAC *tac_first, *tac_last;
 int getyylineno();
 
 void setyylineno(int l);
+
 /* function */
 void tac_init();
 
@@ -161,6 +167,8 @@ EXP *do_exp_list(EXP *exps);
 
 EXP *join_exp(EXP *x, EXP *y);
 
+EXP *flush_exp(EXP *x);
+
 TAC *mk_block(TAC *x);
 
 void error(const char *str);
@@ -174,6 +182,8 @@ TAC *do_while(EXP *exp, TAC *stmt);
 TAC *declare(SYM *type, SYM *name);
 
 TAC *declare_link(SYM *type, SYM *name);
+
+TAC *declare_new(SYM *type, SYM *name);
 
 TAC *mk_func(SYM *type, SYM *name, TAC *tac, TAC *block);
 

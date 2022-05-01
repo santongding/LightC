@@ -71,18 +71,13 @@ void CheckTac(const TAC *tac) {
                 CheckStatus(typeManager.DeclareFunc(lstClass, now->b->ToStr(), now));
             }
                 break;
-            case TAC_ENDFUNC: {
-                assert(scope == 2);
-                sym_tables.pop_back();
-                scope = 1;
-            }
-                break;
             case TAC_DECLARE:
             case TAC_FORMAL: {
                 if (scope == 1) {
                     assert(now->op == TAC_DECLARE);
                     CheckStatus(typeManager.DeclareMember(lstClass, now->b->ToStr(), now->a->ToStr()));
                 } else {
+                    assert(scope);
                     auto name = now->b->ToStr();
                     if (in_sym_tables(name)) {
                         CheckStatus(SYMBOL_REPEAT);
@@ -97,9 +92,10 @@ void CheckTac(const TAC *tac) {
                 sym_tables.push_back(std::set<sym_info>());
             }
                 break;
+            case TAC_ENDFUNC:
             case TAC_ENDBLOCK: {
                 scope--;
-                assert(scope >= 2);
+                assert(scope >= 1);
                 sym_tables.pop_back();
             }
                 break;

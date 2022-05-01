@@ -69,3 +69,9 @@ TAC *declare_link(SYM *type, SYM *name) {
 
     return mk_tac(TAC_DECLARE, new SYM(SYM_TYPE, "link|" + type->ToStr().substr(pos + 1)), name, NULL, true);
 }
+
+TAC *declare_new(SYM *type, SYM *name) {
+    auto pos = type->ToStr().find_first_of('|');
+    assert(pos<type->ToStr().length()-1);
+    return mk_tac(TAC_NEW, type, name, NULL, true);
+}

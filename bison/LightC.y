@@ -33,7 +33,7 @@ void setyylineno(int l) {
 	EXP *exp;
 }
 
-%token INT EQ NE LT LE GT GE UMINUS IF THEN ELSE FI WHILE DO DONE CONTINUE FUNC PRINT RETURN CLASS LINK
+%token INT EQ NE LT LE GT GE UMINUS IF THEN ELSE FI WHILE DO DONE CONTINUE FUNC PRINT RETURN CLASS LINK NEW
 %token <string> INTEGER IDENTIFIER TEXT
 
 %right '='
@@ -92,8 +92,8 @@ $$=NULL;
 |params ',' param{
 	$$=join_tac($1,$3);
 }
-param:var_type identifier{
-	$$=mk_tac(TAC_FORMAL,$1,$2,NULL,true);
+param:identifier ':' var_type{
+	$$=mk_tac(TAC_FORMAL,$3,$1,NULL,true);
 }
 
 block:'{' statement_list '}'{
@@ -132,17 +132,20 @@ $$ = new SYM(SYM_TYPE,"ref|"+$1->ToStr());
 $$= new SYM(SYM_TYPE,"int|");
 }
 
-member_declare_statement:var_type identifier ';'{
-	$$ = declare($1,$2);
+member_declare_statement: identifier ':' var_type';'{
+	$$ = declare($3,$1);
 }
-|LINK var_type identifier ';'{
-	$$ = declare_link($2,$3);
+| identifier ':' LINK var_type';'{
+	$$ = declare_link($4,$1);
 }
 ;
 
-declare_statement:var_type identifier ';'{
-	$$ = declare($1,$2);
-};
+declare_statement:identifier ':' var_type';'{
+	$$ = declare($3,$1);
+}|identifier ':' NEW var_type';'{
+	$$ = declare_new($4,$1);
+}
+;
 
 
 while_statement : WHILE '(' expression ')' block
@@ -188,59 +191,59 @@ expression_list : {
 | expression
 |  expression_list ',' expression
 {
-	$$=join_exp($1,$3);
+	$$=join_exp($1,flush_exp($3));
 }
 ;
 
 expression : expression '=' expression {
-	$$=do_assign($1, $3);
+	$$=do_assign($1,flush_exp($3));
 }
 | expression '.' identifier{
-	$$=do_locate($1,$3);
+	$$=do_locate(flush_exp($1),$3);
 }
 | expression '+' expression
 {
-	$$=do_bin(TAC_ADD, $1, $3);
+	$$=do_bin(TAC_ADD, flush_exp($1), flush_exp($3));
 }
 | expression '-' expression
 {
-	$$=do_bin(TAC_SUB, $1, $3);
+	$$=do_bin(TAC_SUB, flush_exp($1), flush_exp($3));
 }
 | expression '*' expression
 {
-	$$=do_bin(TAC_MUL, $1, $3);
+	$$=do_bin(TAC_MUL, flush_exp($1), flush_exp($3));
 }
 | expression '/' expression
 {
-	$$=do_bin(TAC_DIV, $1, $3);
+	$$=do_bin(TAC_DIV, flush_exp($1), flush_exp($3));
 }
 | '-' expression  %prec UMINUS
 {
-	$$=do_un(TAC_NEG, $2);
+	$$=do_un(TAC_NEG, flush_exp($2));
 }
 | expression EQ expression
 {
-	$$=do_cmp(TAC_EQ, $1, $3);
+	$$=do_cmp(TAC_EQ, flush_exp($1), flush_exp($3));
 }
 | expression NE expression
 {
-	$$=do_cmp(TAC_NE, $1, $3);
+	$$=do_cmp(TAC_NE, flush_exp($1), flush_exp($3));
 }
 | expression LT expression
 {
-	$$=do_cmp(TAC_LT, $1, $3);
+	$$=do_cmp(TAC_LT, flush_exp($1), ($3));
 }
 | expression LE expression
 {
-	$$=do_cmp(TAC_LE, $1, $3);
+	$$=do_cmp(TAC_LE, flush_exp($1), flush_exp($3));
 }
 | expression GT expression
 {
-	$$=do_cmp(TAC_GT, $1, $3);
+	$$=do_cmp(TAC_GT, flush_exp($1), flush_exp($3));
 }
 | expression GE expression
 {
-	$$=do_cmp(TAC_GE, $1, $3);
+	$$=do_cmp(TAC_GE, flush_exp($1), flush_exp($3));
 }
 | '(' expression_list ')'
 {
@@ -256,7 +259,7 @@ expression : expression '=' expression {
 }
 | expression '.' identifier '(' expression_list ')'
 {
-	$$=do_call_ret($1,$3,$5);
+	$$=do_call_ret(flush_exp($1),$3,$5);
 }
 | error
 {
@@ -307,7 +310,7 @@ int main(int argc,   char *argv[])
 
 	yyparse();
 	tac_dump();
-	CheckTac(tac_first);
+	//CheckTac(tac_first);
 
 	return 0;
 }

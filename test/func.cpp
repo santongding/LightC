@@ -1,15 +1,9 @@
 class a{
-    link b x;
-    a fa(a x,b y){
-        //y.x = a+b+c;
-        this.x=(x+y).b;
-        y.x=y.x=x.y;
-        this.f();
-        //int c;
-        //b z;
-        //c=x+y--z.a.y;
-        return 1;
+    x:link b;
+    x:link a;
+    b func(i:int,a:b){
+        (y.x=a.b+1).a.b.c;
+        (a.b=x.y=y.z).x=1;
     }
-
 }
 class b{}

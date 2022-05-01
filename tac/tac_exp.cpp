@@ -22,8 +22,14 @@ EXP *do_assign(EXP *var, EXP *exp) {
     TAC *code;
 
     if (var->ret->IsConst()) error("assignment to non-variable");
-
-    code = mk_tac(TAC_COPY, var->ret, exp->ret, NULL);
+    if (!var->ret->Is<SYM_REF>()) {
+        code = mk_tac(TAC_COPY, var->ret, exp->ret, NULL);
+    } else {
+        auto n = var->ret->ToStr().find_first_of("->");
+        auto sx = new SYM(SYM_SYMBOL, var->ret->ToStr().substr(0, n));
+        auto sy = new SYM(SYM_SYMBOL, var->ret->ToStr().substr(n + 2));
+        code = mk_tac(TAC_BIND, sx, sy, exp->ret);
+    }
     code->prev = exp->tac;
 
     var->tac = join_tac(var->tac, code);
@@ -158,12 +164,11 @@ string find_first_and_truncate(string &s) {
 
 EXP *do_locate(EXP *x, SYM *y) {
     auto sx = x->ret;
-    SYM *ret = new SYM(SYM_SYMBOL, mk_tmp());
-    auto code = mk_tac(TAC_DECLARE, new SYM(SYM_TYPE, "pointer|any|"), ret, nullptr);
-    code = join_tac(code, mk_tac(TAC_LOCATE, ret, sx, y));
-    x->ret = ret;
-
-    x->tac = join_tac(x->tac, code);
+    if (sx->IsConst()) {
+        error("const invalid");
+    }
+    assert(sx->Is<SYM_SYMBOL>());
+    x->ret = new SYM(SYM_REF, sx->ToStr() + "->" + y->ToStr());
     return x;
 }
 
@@ -202,7 +207,7 @@ EXP *do_call_ret(EXP *obj, SYM *func, EXP *arglist) {
     EXP *exps = do_exp_list(lis);
     temp = join_tac(exps ? exps->tac : nullptr, code);
     ret = new SYM(SYM_UNKNOWN, mk_tmp()); /* For the result */
-    code = mk_tac(TAC_DECLARE, new SYM(SYM_TYPE,"any|"),ret, NULL);
+    code = mk_tac(TAC_DECLARE, new SYM(SYM_TYPE, "ref|"), ret, NULL);
     code->prev = temp;
     temp = mk_tac(TAC_CALL, ret, obj->ret, func);
 
@@ -220,6 +225,20 @@ EXP *join_exp(EXP *x, EXP *y) {
     auto tp = x;
     while (tp->next)tp = tp->next;
     tp->next = y;
+    return x;
+}
+
+EXP *flush_exp(EXP *x) {
+    if (x->ret->Is<SYM_REF>()) {
+        auto n = x->ret->ToStr().find_first_of("->");
+        auto sx = new SYM(SYM_SYMBOL, x->ret->ToStr().substr(0, n));
+        auto sy = new SYM(SYM_SYMBOL, x->ret->ToStr().substr(n + 2));
+        auto tp = new SYM(SYM_SYMBOL, mk_tmp());
+        auto code = mk_tac(TAC_DECLARE, new SYM(SYM_TYPE, "ref|"), tp, NULL, NULL);
+        code = join_tac(code, mk_tac(TAC_LOCATE, tp, sx, sy));
+        x->ret = tp;
+        x->tac = join_tac(x->tac, code);
+    }
     return x;
 }
 
