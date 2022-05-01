@@ -188,7 +188,9 @@ expression_statement : expression_list ';'
 expression_list : {
 	$$=NULL;
 }
-| expression
+| expression{
+	$$=flush_exp($1);
+}
 |  expression_list ',' expression
 {
 	$$=join_exp($1,flush_exp($3));

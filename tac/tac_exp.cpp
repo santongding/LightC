@@ -52,7 +52,7 @@ EXP *do_un(int unop, EXP *exp) {
         return exp; /* The new expression */
     }
 
-    temp = mk_tac(TAC_DECLARE, new SYM(SYM_TYPE, "ref|"), new SYM(SYM_SYMBOL, mk_tmp()), NULL, NULL);
+    temp = mk_tac(TAC_DECLARE, new SYM(SYM_TYPE, "any|"), new SYM(SYM_SYMBOL, mk_tmp()), NULL, NULL);
     temp->prev = exp->tac;
     ret = mk_tac(unop, temp->b, exp->ret, NULL);
     ret->prev = temp;
@@ -94,7 +94,7 @@ EXP *do_bin(int binop, EXP *exp1, EXP *exp2) {
         return exp1; /* The new expression */
     }
 
-    temp = mk_tac(TAC_DECLARE, new SYM(SYM_TYPE, "ref|"), new SYM(SYM_SYMBOL, mk_tmp()), NULL, NULL);
+    temp = mk_tac(TAC_DECLARE, new SYM(SYM_TYPE, "any|"), new SYM(SYM_SYMBOL, mk_tmp()), NULL, NULL);
     temp->prev = join_tac(exp1->tac, exp2->tac);
     ret = mk_tac(binop, temp->b, exp1->ret, exp2->ret);
     ret->prev = temp;
@@ -143,7 +143,7 @@ EXP *do_cmp(int binop, EXP *exp1, EXP *exp2) {
         return exp1; /* The new expression */
     }
 
-    temp = mk_tac(TAC_DECLARE, new SYM(SYM_TYPE, "ref|"), new SYM(SYM_SYMBOL, mk_tmp()), NULL, NULL);
+    temp = mk_tac(TAC_DECLARE, new SYM(SYM_TYPE, "any|"), new SYM(SYM_SYMBOL, mk_tmp()), NULL, NULL);
     temp->prev = join_tac(exp1->tac, exp2->tac);
     ret = mk_tac(binop, temp->b, exp1->ret, exp2->ret);
     ret->prev = temp;
@@ -180,7 +180,7 @@ EXP *do_exp_list(EXP *exps) {
         code = join_tac(code, exps->tac);
         exps = exps->next;
     }
-    if (exps)
+    if (ret)
         ret->tac = code;
     return ret;
 }
@@ -206,8 +206,8 @@ EXP *do_call_ret(EXP *obj, SYM *func, EXP *arglist) {
 
     EXP *exps = do_exp_list(lis);
     temp = join_tac(exps ? exps->tac : nullptr, code);
-    ret = new SYM(SYM_UNKNOWN, mk_tmp()); /* For the result */
-    code = mk_tac(TAC_DECLARE, new SYM(SYM_TYPE, "ref|"), ret, NULL);
+    ret = new SYM(SYM_SYMBOL, mk_tmp()); /* For the result */
+    code = mk_tac(TAC_DECLARE, new SYM(SYM_TYPE, "any|"), ret, NULL);
     code->prev = temp;
     temp = mk_tac(TAC_CALL, ret, obj->ret, func);
 
@@ -234,7 +234,7 @@ EXP *flush_exp(EXP *x) {
         auto sx = new SYM(SYM_SYMBOL, x->ret->ToStr().substr(0, n));
         auto sy = new SYM(SYM_SYMBOL, x->ret->ToStr().substr(n + 2));
         auto tp = new SYM(SYM_SYMBOL, mk_tmp());
-        auto code = mk_tac(TAC_DECLARE, new SYM(SYM_TYPE, "ref|"), tp, NULL, NULL);
+        auto code = mk_tac(TAC_DECLARE, new SYM(SYM_TYPE, "any|"), tp, NULL, NULL);
         code = join_tac(code, mk_tac(TAC_LOCATE, tp, sx, sy));
         x->ret = tp;
         x->tac = join_tac(x->tac, code);
