@@ -61,9 +61,11 @@ TAC *declare(SYM *type, SYM *name) {
 
 
 TAC *declare_link(SYM *type, SYM *name) {
-    if(string("ref")!=type->ToStr().substr(0,type->ToStr().find_first_of('|'))){
+    auto pos = type->ToStr().find_first_of('|');
+    if (string("ref") != type->ToStr().substr(0, pos)) {
         error("cannot link to a non-ref variable");
     }
 
-    return mk_tac(TAC_DECLARE, type, name, NULL, true);
+
+    return mk_tac(TAC_DECLARE, new SYM(SYM_TYPE, "link|" + type->ToStr().substr(pos + 1)), name, NULL, true);
 }

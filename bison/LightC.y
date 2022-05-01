@@ -67,9 +67,14 @@ classes:class| classes class{
 class:CLASS identifier '{' class_members '}'{
 	$$=mk_class($2,$4);
 }
+|CLASS identifier '{' '}'{
+	$$=mk_class($2,NULL);
+}
+
 class_members:class_member|class_members class_member{
 	$$=join_tac($1,$2);
 }
+
 class_member:function|member_declare_statement;
 
 function:var_type identifier '(' params ')' block{
@@ -190,7 +195,7 @@ expression_list : {
 expression : expression '=' expression {
 	$$=do_assign($1, $3);
 }
-| expression '.' expression{
+| expression '.' identifier{
 	$$=do_locate($1,$3);
 }
 | expression '+' expression
@@ -301,8 +306,8 @@ int main(int argc,   char *argv[])
 	tac_init();
 
 	yyparse();
-	CheckTac(tac_first);
 	tac_dump();
+	CheckTac(tac_first);
 
 	return 0;
 }

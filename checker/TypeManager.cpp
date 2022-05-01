@@ -54,6 +54,7 @@ bool TypeInfo::Is() const {
 
 string TypeInfo::Format(IdentifierMap *idMap) {
     std::stringstream stringstream;
+    assert(type != ANY_V);
     if (type == INT_V) {
         return "[int]";
     } else {
@@ -63,6 +64,19 @@ string TypeInfo::Format(IdentifierMap *idMap) {
         }
         stringstream << idMap->nti(type_name) << "<" << type_name << ">]";
     }
+    return stringstream.str();
+}
+
+string FuncInfo::Format(IdentifierMap *idMap) {
+    std::stringstream stringstream;
+    stringstream << "(";
+    for (int i = 0; i < argsType.size(); i++) {
+        stringstream << argsType[i].first.Format(idMap) << " " << idMap->nti(argsType[i].second);
+        if (i != argsType.size() - 1)
+            stringstream << ", ";
+    }
+    stringstream << ") -> " << retType.Format(idMap);
+
     return stringstream.str();
 }
 
@@ -82,9 +96,10 @@ STATUS ClassInfo::DeclareMember(const int name, const TypeInfo &type) {
 }
 
 
-STATUS ClassInfo::DeclareFunc(const int name, TAC *formals, int formalNum, TAC *ret) {
+STATUS ClassInfo::DeclareFunc(const int name, TypeInfo ret, vector<pair<TypeInfo, int>> ts) {
+    assert(ts.size() >= 1);
     if (membersType.find(name) == membersType.end() && funcs.find(name) == funcs.end()) {
-        funcs[name] = FuncInfo();
+        funcs[name] = FuncInfo(ret, vector<pair<TypeInfo, int>>(ts.begin() + 1, ts.end()));
         return OK;
     } else {
         return SYMBOL_REPEAT;
@@ -98,6 +113,10 @@ string ClassInfo::Format(IdentifierMap *idMap) {
         auto x = membersType.find(i);
         stringstream << "\t" << x->second.Format(idMap) << " " << idMap->nti(x->first) << "<" << x->first << ">\n";
     }
+    for (auto &x: funcs) {
+
+        stringstream << "\t" << idMap->nti(x.first) << "<" << x.first << ">: " << x.second.Format(idMap) << "\n";
+    }
     return stringstream.str();
 }
 
@@ -107,6 +126,7 @@ TypeManager::TypeManager() {
 }
 
 void TypeManager::Init() {
+    idMap.RecordIdentifier("this");
     idMap.Init();
 }
 
@@ -122,6 +142,14 @@ STATUS TypeManager::TryDecodeType(const string &ts, TypeInfo &type) {
         assert(pos == ts.length() - 1);
         type = TypeInfo(INT_V);
         return OK;
+    } else if (tt == "any") {
+        assert(pos == ts.length() - 1);
+        type = TypeInfo(ANY_V);
+        return OK;
+    } else if (tt == "pointer") {
+        auto sts = TryDecodeType(ts.substr(pos + 1), type);
+        type.IsPointer = true;
+        return sts;
     } else {
         assert(pos < ts.length() - 1);
         if (classes.find(idMap.itn(ts.substr(pos + 1))) == classes.end()) {
@@ -161,10 +189,29 @@ STATUS TypeManager::DeclareMember(const string &name, const string &mem, const s
 }
 
 
-STATUS TypeManager::DeclareFunc(const string &name, const string &funcname, TAC *formals, int formalNum, TAC *ret) {
+STATUS TypeManager::DeclareFunc(const string &name, const string &funcname, const TAC *func) {
     assert(classes.find(idMap.itn(name)) != classes.end());
 
-    return classes[idMap.itn(name)]->DeclareFunc(idMap.itn(funcname), formals, formalNum, ret);
+    TypeInfo t;
+    TypeInfo ret;
+    CheckStatus(TryDecodeType(func->a->ToStr(), ret));
+    vector<pair<TypeInfo, int>> ts;
+    TAC *first = func->next;
+    assert(first && first->op == TAC_FORMAL);
+    auto thistype = first->a->ToStr();
+    assert(first->b->ToStr() == "this");
+    assert(thistype.find_first_of('|') == thistype.length() - 1);
+    thistype += name;
+
+    CheckStatus(TryDecodeType(thistype, t));
+
+    ts.push_back({t, idMap.itn("this")});
+
+    for (TAC *form = first->next; form && form->op == TAC_FORMAL; form = form->next) {
+        CheckStatus(TryDecodeType(form->a->ToStr(), t));
+        ts.push_back({t, idMap.itn(form->b->ToStr())});
+    }
+    return classes[idMap.itn(name)]->DeclareFunc(idMap.itn(funcname), ret, ts);
 }
 
 void TypeManager::Print() {
@@ -173,3 +220,11 @@ void TypeManager::Print() {
     }
 }
 
+void TypeManager::CastType(string &from, const string &to) {
+    TypeInfo to_t;
+    CheckStatus(TryDecodeType(to, to_t));
+    TypeInfo from_t;
+    CheckStatus(TryDecodeType(from, from_t));
+    CheckStatus(from_t.Cast(to_t));
+    from = from_t.ToStr(&idMap);
+}

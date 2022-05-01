@@ -46,12 +46,12 @@ EXP *do_un(int unop, EXP *exp) {
         return exp; /* The new expression */
     }
 
-    temp = mk_tac(TAC_DECLARE, new SYM(SYM_UNKNOWN, mk_tmp()), NULL, NULL);
+    temp = mk_tac(TAC_DECLARE, new SYM(SYM_TYPE, "ref|"), new SYM(SYM_SYMBOL, mk_tmp()), NULL, NULL);
     temp->prev = exp->tac;
-    ret = mk_tac(unop, temp->a, exp->ret, NULL);
+    ret = mk_tac(unop, temp->b, exp->ret, NULL);
     ret->prev = temp;
 
-    exp->ret = temp->a;
+    exp->ret = temp->b;
     exp->tac = ret;
 
     return exp;
@@ -88,12 +88,12 @@ EXP *do_bin(int binop, EXP *exp1, EXP *exp2) {
         return exp1; /* The new expression */
     }
 
-    temp = mk_tac(TAC_DECLARE, new SYM(SYM_UNKNOWN, mk_tmp()), NULL, NULL);
+    temp = mk_tac(TAC_DECLARE, new SYM(SYM_TYPE, "ref|"), new SYM(SYM_SYMBOL, mk_tmp()), NULL, NULL);
     temp->prev = join_tac(exp1->tac, exp2->tac);
-    ret = mk_tac(binop, temp->a, exp1->ret, exp2->ret);
+    ret = mk_tac(binop, temp->b, exp1->ret, exp2->ret);
     ret->prev = temp;
 
-    exp1->ret = temp->a;
+    exp1->ret = temp->b;
     exp1->tac = ret;
 
     return exp1;
@@ -137,12 +137,12 @@ EXP *do_cmp(int binop, EXP *exp1, EXP *exp2) {
         return exp1; /* The new expression */
     }
 
-    temp = mk_tac(TAC_DECLARE, new SYM(SYM_UNKNOWN, mk_tmp()), NULL, NULL);
+    temp = mk_tac(TAC_DECLARE, new SYM(SYM_TYPE, "ref|"), new SYM(SYM_SYMBOL, mk_tmp()), NULL, NULL);
     temp->prev = join_tac(exp1->tac, exp2->tac);
-    ret = mk_tac(binop, temp->a, exp1->ret, exp2->ret);
+    ret = mk_tac(binop, temp->b, exp1->ret, exp2->ret);
     ret->prev = temp;
 
-    exp1->ret = temp->a;
+    exp1->ret = temp->b;
     exp1->tac = ret;
 
     return exp1;
@@ -156,14 +156,14 @@ string find_first_and_truncate(string &s) {
     return name;
 }*/
 
-EXP *do_locate(EXP *x, EXP *y) {
+EXP *do_locate(EXP *x, SYM *y) {
     auto sx = x->ret;
-    auto sy = y->ret;
-    SYM *ret = new SYM(SYM_UNKNOWN, mk_tmp());
-    auto code = mk_tac(TAC_DECLARE_AND_LOCATE, ret, sx, sy);
+    SYM *ret = new SYM(SYM_SYMBOL, mk_tmp());
+    auto code = mk_tac(TAC_DECLARE, new SYM(SYM_TYPE, "pointer|any|"), ret, nullptr);
+    code = join_tac(code, mk_tac(TAC_LOCATE, ret, sx, y));
     x->ret = ret;
-    code->prev = x->tac;
-    x->tac = join_tac(code, y->tac);
+
+    x->tac = join_tac(x->tac, code);
     return x;
 }
 
@@ -199,9 +199,10 @@ EXP *do_call_ret(EXP *obj, SYM *func, EXP *arglist) {
     }
     code = join_tac(mk_tac(TAC_ACTUAL, obj->ret, NULL, NULL, false), code);
 
-    temp = join_tac(do_exp_list(lis)->tac, code);
+    EXP *exps = do_exp_list(lis);
+    temp = join_tac(exps ? exps->tac : nullptr, code);
     ret = new SYM(SYM_UNKNOWN, mk_tmp()); /* For the result */
-    code = mk_tac(TAC_RETVALUE, ret, NULL, NULL);
+    code = mk_tac(TAC_DECLARE, new SYM(SYM_TYPE,"any|"),ret, NULL);
     code->prev = temp;
     temp = mk_tac(TAC_CALL, ret, obj->ret, func);
 

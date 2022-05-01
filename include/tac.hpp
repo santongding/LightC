@@ -44,10 +44,9 @@ enum SymbolType {
 #define TAC_RETURN 22 /* return a */
 #define TAC_BEGINCLASS 23 /*class begin*/
 #define TAC_ENDCLASS 24 /*class end*/
-#define TAC_DECLARE_AND_LOCATE 25
-#define TAC_RETVALUE 26 /* tmp a */
-#define TAC_BEGINBLOCK 27
-#define TAC_ENDBLOCK 28
+#define TAC_LOCATE 25
+#define TAC_BEGINBLOCK 26
+#define TAC_ENDBLOCK 27
 
 /* struct */
 class SYM {
@@ -154,7 +153,7 @@ EXP *do_bin(int binop, EXP *exp1, EXP *exp2);
 
 EXP *do_cmp(int binop, EXP *exp1, EXP *exp2);
 
-EXP *do_locate(EXP *x, EXP *y);
+EXP *do_locate(EXP *x, SYM *y);
 
 EXP *do_call_ret(EXP *obj, SYM *func, EXP *arglist);
 

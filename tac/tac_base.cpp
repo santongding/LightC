@@ -124,11 +124,11 @@ void tac_print(TAC *i) {
             break;
 
         case TAC_BEGINFUNC:
-            printf("begin func: %s %s", i->a->ToStr().c_str(), i->b->ToStr().c_str());
+            printf("begin func.cpp: %s %s", i->a->ToStr().c_str(), i->b->ToStr().c_str());
             break;
 
         case TAC_ENDFUNC:
-            printf("end func");
+            printf("end func.cpp");
             break;
 
         case TAC_BEGINCLASS:
@@ -138,11 +138,8 @@ void tac_print(TAC *i) {
         case TAC_ENDCLASS:
             printf("end class");
             break;
-        case TAC_DECLARE_AND_LOCATE:
-            printf("pointer %s = %s -> %s", i->a->ToStr().c_str(), i->b->ToStr().c_str(), i->c->ToStr().c_str());
-            break;
-        case TAC_RETVALUE:
-            printf("ret value %s", i->a->ToStr().c_str());
+        case TAC_LOCATE:
+            printf("%s = %s -> %s", i->a->ToStr().c_str(), i->b->ToStr().c_str(), i->c->ToStr().c_str());
             break;
         case TAC_BEGINBLOCK:
             printf("block begin:");
