@@ -30,10 +30,15 @@ jobs:
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
-    - name: CTest
+    - name: Test
       working-directory: ${{github.workspace}}/build
       # Execute tests defined by the CMake configuration.  
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: ctest -C ${{env.BUILD_TYPE}}
-    - name: Test
-      run: cd ${{github.workspace}} && ls && bash ${{github.workspace}}/tesh.sh
+  Test:
+      runs-on: ubuntu-latest
+      steps:
+          - name: Test
+            working-directory: ${{github.workspace}}
+            run:  bash ./test.sh
+          
