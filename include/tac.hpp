@@ -86,6 +86,7 @@ public:
             assert(!IsConst());
         }
         _type = T;
+        return this;
     }
 
     void SetStr(const string &s) {
