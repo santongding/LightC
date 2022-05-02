@@ -2,8 +2,9 @@
 // Created by os on 4/29/22.
 //
 #include "tac.hpp"
+#include "TypeManager.h"
 
-TAC *mk_tac(int op, SYM *a, SYM *b, SYM *c) {
+TAC *mk_tac(TAC_TYPE op, SYM *a, SYM *b, SYM *c) {
     return mk_tac(op, a, b, c, true);
 }
 
@@ -21,14 +22,14 @@ EXP *mk_exp(EXP *next, SYM *ret, TAC *code) {
 EXP *do_assign(EXP *var, EXP *exp) {
     TAC *code;
 
-    if (var->ret->IsConst()) error("assignment to non-variable");
+    if (var->ret->IsConst()) CheckStatus(ASSIGN_TO_CONST);
     if (!var->ret->Is<SYM_REF>()) {
         code = mk_tac(TAC_COPY, var->ret, exp->ret, NULL);
     } else {
         auto n = var->ret->ToStr().find_first_of("->");
         auto sx = new SYM(SYM_SYMBOL, var->ret->ToStr().substr(0, n));
         auto sy = new SYM(SYM_SYMBOL, var->ret->ToStr().substr(n + 2));
-        code = mk_tac(TAC_BIND, sx, sy, exp->ret);
+        code = mk_tac(TAC_BIND, exp->ret, sx, sy);
     }
     code->prev = exp->tac;
 
@@ -36,7 +37,7 @@ EXP *do_assign(EXP *var, EXP *exp) {
     return var;
 }
 
-EXP *do_un(int unop, EXP *exp) {
+EXP *do_un(TAC_TYPE unop, EXP *exp) {
     TAC *temp; /* TAC code for temp symbol */
     TAC *ret; /* TAC code for result */
 
@@ -63,7 +64,7 @@ EXP *do_un(int unop, EXP *exp) {
     return exp;
 }
 
-EXP *do_bin(int binop, EXP *exp1, EXP *exp2) {
+EXP *do_bin(TAC_TYPE binop, EXP *exp1, EXP *exp2) {
     TAC *temp; /* TAC code for temp symbol */
     TAC *ret; /* TAC code for result */
 
@@ -105,7 +106,7 @@ EXP *do_bin(int binop, EXP *exp1, EXP *exp2) {
     return exp1;
 }
 
-EXP *do_cmp(int binop, EXP *exp1, EXP *exp2) {
+EXP *do_cmp(TAC_TYPE binop, EXP *exp1, EXP *exp2) {
     TAC *temp; /* TAC code for temp symbol */
     TAC *ret; /* TAC code for result */
 
@@ -165,7 +166,7 @@ string find_first_and_truncate(string &s) {
 EXP *do_locate(EXP *x, SYM *y) {
     auto sx = x->ret;
     if (sx->IsConst()) {
-        error("const invalid");
+        CheckStatus(TYPE_NEED_CLASS);
     }
     assert(sx->Is<SYM_SYMBOL>());
     x->ret = new SYM(SYM_REF, sx->ToStr() + "->" + y->ToStr());
@@ -208,7 +209,7 @@ EXP *do_call_ret(EXP *obj, SYM *func, EXP *arglist) {
     temp = join_tac(exps ? exps->tac : nullptr, code);
     ret = new SYM(SYM_SYMBOL, mk_tmp()); /* For the result */
     code = mk_tac(TAC_DECLARE, new SYM(SYM_TYPE, "any|"), ret, NULL);
-    code->prev = temp;
+    code = join_tac(code,temp);
     temp = mk_tac(TAC_CALL, ret, obj->ret, func);
 
     temp->prev = code;
@@ -242,11 +243,11 @@ EXP *flush_exp(EXP *x) {
     return x;
 }
 
-void error(const char *str) {
-    fprintf(stderr, "line %d:  error: %s\n", getyylineno(), str);
-    exit(1);
+void error(const char *str,int code) {
+    fprintf(stderr, "line %d:  error<%d>: %s\n", getyylineno(), code,str);
+    exit(code);
 }
 
-void error(const string &str) {
-    error(str.c_str());
+void error(const string &str,int code) {
+    error(str.c_str(),code);
 }

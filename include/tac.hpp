@@ -3,6 +3,7 @@
 
 #include <string>
 #include <cassert>
+#include "def.h"
 
 using std::string;
 /* type of symbol */
@@ -16,37 +17,41 @@ enum SymbolType {
 
 };
 
+
 /* type of tac */
-#define TAC_UNDEF 0 /* undefined */
-#define TAC_ADD 1 /* a=b+c */
-#define TAC_SUB 2 /* a=b-c */
-#define TAC_MUL 3 /* a=b*c */
-#define TAC_DIV 4 /* a=b/c */
-#define TAC_EQ 5 /* a=(b==c) */
-#define TAC_NE 6 /* a=(b!=c) */
-#define TAC_LT 7 /* a=(b<c) */
-#define TAC_LE 8 /* a=(b<=c) */
-#define TAC_GT 9 /* a=(b>c) */
-#define TAC_GE 10 /* a=(b>=c) */
-#define TAC_NEG 11 /* a=-b */
-#define TAC_COPY 12 /* a=b */
-#define TAC_GOTO 13 /* goto a */
-#define TAC_IFZ 14 /* ifz b goto a */
-#define TAC_BEGINFUNC 15 /* function begin */
-#define TAC_ENDFUNC 16 /* function end */
-#define TAC_LABEL 17 /* label a */
-#define TAC_DECLARE 18 /* int a */
-#define TAC_FORMAL 19 /* formal a */
-#define TAC_ACTUAL 20 /* actual a */
-#define TAC_CALL 21 /* a=call b */
-#define TAC_RETURN 22 /* return a */
-#define TAC_BEGINCLASS 23 /*class begin*/
-#define TAC_ENDCLASS 24 /*class end*/
-#define TAC_LOCATE 25
-#define TAC_BEGINBLOCK 26
-#define TAC_ENDBLOCK 27
-#define TAC_NEW 28
-#define TAC_BIND 29
+enum TAC_TYPE {
+
+    TAC_UNDEF = 0, /* undefined */
+    TAC_ADD = 1, /* a=b+c */
+    TAC_SUB = 2,/* a=b-c */
+    TAC_MUL = 3,/* a=b*c */
+    TAC_DIV = 4,/* a=b/c */
+    TAC_EQ = 5,/* a=(b==c) */
+    TAC_NE = 6,/* a=(b!=c) */
+    TAC_LT = 7,/* a=(b<c) */
+    TAC_LE = 8,/* a=(b<=c) */
+    TAC_GT = 9,/* a=(b>c) */
+    TAC_GE = 10,/* a=(b>=c) */
+    TAC_NEG = 11,/* a=-b */
+    TAC_COPY = 12,/* a=b */
+    TAC_GOTO = 13,/* goto a */
+    TAC_IFZ = 14,/* ifz b goto a */
+    TAC_BEGINFUNC = 15,/* function begin */
+    TAC_ENDFUNC = 16,/* function end */
+    TAC_LABEL = 17,/* label a */
+    TAC_DECLARE = 18,/* int a */
+    TAC_FORMAL = 19,/* formal a */
+    TAC_ACTUAL = 20,/* actual a */
+    TAC_CALL = 21,/* a=call b */
+    TAC_RETURN = 22,/* return a */
+    TAC_BEGINCLASS = 23,/*class begin*/
+    TAC_ENDCLASS = 24,/*class end*/
+    TAC_LOCATE = 25,
+    TAC_BEGINBLOCK = 26,
+    TAC_ENDBLOCK = 27,
+    TAC_NEW = 28,
+    TAC_BIND = 29,
+};
 
 /* struct */
 class SYM {
@@ -83,6 +88,11 @@ public:
         _type = T;
     }
 
+    void SetStr(const string &s) {
+        assert(_type != SYM_CONST);
+        _name = s;
+    }
+
     int &GetValue() {
         assert(IsConst());
         return _value;
@@ -109,7 +119,7 @@ typedef struct tac /* TAC instruction node */
     int linenum;
     struct tac *next; /* Next instruction */
     struct tac *prev; /* Previous instruction */
-    int op; /* TAC instruction */
+    TAC_TYPE op; /* TAC instruction */
     SYM *a;
     SYM *b;
     SYM *c;
@@ -145,7 +155,7 @@ string mk_tmp();
 
 SYM *mk_const(int n);
 
-TAC *mk_tac(int op, SYM *a, SYM *b, SYM *c, bool lineno);
+TAC *mk_tac(TAC_TYPE op, SYM *a, SYM *b, SYM *c, bool lineno);
 
 EXP *mk_exp(EXP *next, SYM *ret, TAC *code);
 
@@ -153,11 +163,11 @@ TAC *join_tac(TAC *c1, TAC *c2);
 
 EXP *do_assign(EXP *var, EXP *exp);
 
-EXP *do_un(int unop, EXP *exp);
+EXP *do_un(TAC_TYPE unop, EXP *exp);
 
-EXP *do_bin(int binop, EXP *exp1, EXP *exp2);
+EXP *do_bin(TAC_TYPE binop, EXP *exp1, EXP *exp2);
 
-EXP *do_cmp(int binop, EXP *exp1, EXP *exp2);
+EXP *do_cmp(TAC_TYPE binop, EXP *exp1, EXP *exp2);
 
 EXP *do_locate(EXP *x, SYM *y);
 
@@ -171,9 +181,9 @@ EXP *flush_exp(EXP *x);
 
 TAC *mk_block(TAC *x);
 
-void error(const char *str);
+void error(const char *str, int code);
 
-void error(const string &str);
+void error(const string &str, int code);
 
 TAC *do_test(EXP *exp, TAC *stmt1, TAC *stmt2);
 
@@ -188,5 +198,12 @@ TAC *declare_new(SYM *type, SYM *name);
 TAC *mk_func(SYM *type, SYM *name, TAC *tac, TAC *block);
 
 TAC *mk_class(SYM *name, TAC *tac);
+
+
+inline void CheckStatus(STATUS s) {
+    if (s != OK) {
+        error(Status2Str(s), s);
+    }
+}
 
 #endif //LIGHTC_TAC_HPP

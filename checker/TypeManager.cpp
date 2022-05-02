@@ -44,7 +44,7 @@ TypeInfo::TypeInfo(VALUE_TYPE t, int n) {
 TypeInfo::TypeInfo(VALUE_TYPE t) {
     type_name = 0;
     type = t;
-    assert(t == INT_V);
+    assert(t == INT_V || t == ANY_V);
 }
 
 template<VALUE_TYPE T>
@@ -71,7 +71,8 @@ string FuncInfo::Format(IdentifierMap *idMap) {
     std::stringstream stringstream;
     stringstream << "(";
     for (int i = 0; i < argsType.size(); i++) {
-        stringstream << argsType[i].first.Format(idMap) << " " << idMap->nti(argsType[i].second);
+        stringstream << idMap->nti(argsType[i].second) << "<"
+                     << argsType[i].second << ">: " << argsType[i].first.Format(idMap);
         if (i != argsType.size() - 1)
             stringstream << ", ";
     }
@@ -99,7 +100,7 @@ STATUS ClassInfo::DeclareMember(const int name, const TypeInfo &type) {
 STATUS ClassInfo::DeclareFunc(const int name, TypeInfo ret, vector<pair<TypeInfo, int>> ts) {
     assert(ts.size() >= 1);
     if (membersType.find(name) == membersType.end() && funcs.find(name) == funcs.end()) {
-        funcs[name] = FuncInfo(ret, vector<pair<TypeInfo, int>>(ts.begin() + 1, ts.end()));
+        funcs[name] = FuncInfo(ret, vector<pair<TypeInfo, int>>(ts.begin() , ts.end()));
         return OK;
     } else {
         return SYMBOL_REPEAT;
@@ -111,7 +112,7 @@ string ClassInfo::Format(IdentifierMap *idMap) {
     stringstream << idMap->nti(className) << "<" << className << ">:\n";
     for (auto &i: membersOrder) {
         auto x = membersType.find(i);
-        stringstream << "\t" << x->second.Format(idMap) << " " << idMap->nti(x->first) << "<" << x->first << ">\n";
+        stringstream << "\t" << idMap->nti(x->first) << "<" << x->first << ">: " << x->second.Format(idMap) << "\n";
     }
     for (auto &x: funcs) {
 
@@ -146,21 +147,17 @@ STATUS TypeManager::TryDecodeType(const string &ts, TypeInfo &type) {
         assert(pos == ts.length() - 1);
         type = TypeInfo(ANY_V);
         return OK;
-    } else if (tt == "pointer") {
-        auto sts = TryDecodeType(ts.substr(pos + 1), type);
-        type.IsPointer = true;
-        return sts;
     } else {
         assert(pos < ts.length() - 1);
         if (classes.find(idMap.itn(ts.substr(pos + 1))) == classes.end()) {
-            return SYMBOL_UNDEFINED;
+            return TYPE_UNKNOWN;
         }
         if (tt == "ref") {
             type = TypeInfo(REF_V, idMap.itn(ts.substr(pos + 1)));
         } else if (tt == "link") {
             type = TypeInfo(LINK_V, idMap.itn(ts.substr(pos + 1)));
         } else {
-            error("wrong value type");
+            CheckStatus(TYPE_CONFLICT);
         }
         return OK;
     }
@@ -197,11 +194,15 @@ STATUS TypeManager::DeclareFunc(const string &name, const string &funcname, cons
     CheckStatus(TryDecodeType(func->a->ToStr(), ret));
     vector<pair<TypeInfo, int>> ts;
     TAC *first = func->next;
+    if (first->op == TAC_BEGINBLOCK) {
+        first = first->next;
+    }
     assert(first && first->op == TAC_FORMAL);
     auto thistype = first->a->ToStr();
     assert(first->b->ToStr() == "this");
     assert(thistype.find_first_of('|') == thistype.length() - 1);
     thistype += name;
+    first->a->SetStr(thistype);
 
     CheckStatus(TryDecodeType(thistype, t));
 
@@ -220,11 +221,63 @@ void TypeManager::Print() {
     }
 }
 
-void TypeManager::CastType(string &from, const string &to) {
+void
+TypeManager::CheckTac(SYM *caller, SYM *callee, TAC *tac, std::function<SYM *(SYM *)> &get_sym_type) {
+    TypeInfo ee;
+    CheckStatus(TryDecodeType(callee->ToStr(), ee));
+
+    if (!ee.Is<REF_V>()) {
+        CheckStatus(TYPE_NEED_CLASS);
+    }
+    auto type = ee.GetTypeName();
+
+    assert(classes.find(type) != classes.end());
+
+    auto cls = classes[type];
+    if (tac->op == TAC_LOCATE || tac->op == TAC_BIND) {
+        auto tp = cls->GetMemType(idMap.itn(tac->c->ToStr()));
+        CastType(caller, tp);
+    } else if (tac->op == TAC_CALL) {
+        auto tp = cls->GetFunc(idMap.itn(tac->c->ToStr()));
+        auto ti = tp.GetRetType();
+        CastType(caller, ti);
+
+        vector<TAC *> tacs;
+        while (tac->prev->op == TAC_ACTUAL) {
+            tacs.push_back(tac = tac->prev);
+        }
+        if (tacs.size() != tp.GetArgsType().size()) {
+            CheckStatus(FUNC_PARAM_NOT_MATCH);
+        }
+        for (auto &arg: tp.GetArgsType()) {
+            tac = tacs.back();
+            tacs.pop_back();
+
+            SYM *sym_type = get_sym_type(tac->a);
+            CastType(sym_type, arg.first);
+        }
+
+
+    } else {
+        CheckStatus(UNEXPECTED_ERROR);
+    }
+}
+
+void TypeManager::CastType(SYM *from, SYM *to, bool isInt) {
     TypeInfo to_t;
-    CheckStatus(TryDecodeType(to, to_t));
+    CheckStatus(TryDecodeType(to->ToStr(), to_t));
+    CastType(from, to_t);
+
+    if (isInt) {
+        if (from->ToStr().find("int")) {
+            CheckStatus(TYPE_NEED_INT);
+        }
+    }
+}
+
+void TypeManager::CastType(SYM *from, const TypeInfo &t) {
     TypeInfo from_t;
-    CheckStatus(TryDecodeType(from, from_t));
-    CheckStatus(from_t.Cast(to_t));
-    from = from_t.ToStr(&idMap);
+    CheckStatus(TryDecodeType(from->ToStr(), from_t));
+    CheckStatus(from_t.Cast(t));
+    from->SetStr(from_t.ToStr(&idMap));
 }

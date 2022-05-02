@@ -180,7 +180,7 @@ expression_statement : expression_list ';'
 {
 	auto tp =do_exp_list($1);
 	if(tp)
-	$$ = do_exp_list($1)->tac;
+	$$ = tp->tac;
 	else $$ = NULL;
 }
 ;
@@ -265,7 +265,7 @@ expression : expression '=' expression {
 }
 | error
 {
-	error("Bad expression syntax");
+	CheckStatus(BAD_SYNTAX);
 	$$=mk_exp(NULL, NULL, NULL);
 }
 ;
@@ -275,20 +275,19 @@ expression : expression '=' expression {
 
 void yyerror(char* msg)
 {
-	fprintf(stderr, "%s: line %d\n", msg, getyylineno());
-	exit(0);
+	CheckStatus(BAD_SYNTAX);
 }
 
 
 int main(int argc,   char *argv[])
 {
-	if(argc != 2)
+	if(argc != 3)
 	{
-		printf("usage: %s filename\n", argv[0]);
+		printf("usage: %s filename outputpath\n", argv[0]);
 		exit(0);
 	}
 
-	char *input, *output;
+	char *input;
 
 	input = argv[1];
 	if(freopen(input, "r", stdin)==NULL)
@@ -297,11 +296,8 @@ int main(int argc,   char *argv[])
 		return 0;
 	}
 
-	output=(char *)malloc(strlen(input + 10));
-	strcpy(output,input);
-	strcat(output,".s");
-
-	if(freopen(output, "w", stdout)==NULL)
+	string output =argv[2];
+	if(freopen(output.c_str(), "w", stdout)==NULL)
 	{
 		printf("error: open %s failed\n", output);
 		return 0;
@@ -312,7 +308,7 @@ int main(int argc,   char *argv[])
 
 	yyparse();
 	tac_dump();
-	//CheckTac(tac_first);
-
+	CheckTac(tac_first);
+	tac_dump();
 	return 0;
 }

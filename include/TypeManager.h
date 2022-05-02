@@ -5,6 +5,7 @@
 #ifndef LIGHTC_TYPEMANAGER_H
 #define LIGHTC_TYPEMANAGER_H
 
+#include <functional>
 #include "string"
 #include "set"
 #include "unordered_map"
@@ -12,25 +13,7 @@
 #include "vector"
 #include "def.h"
 
-inline void CheckStatus(STATUS s) {
-    if (s != OK) {
-        switch (s) {
-            case STATUS::SYMBOL_REPEAT: {
-                error("Symbol is repeatedly used in this scope");
-                break;
-            }
-            case STATUS::SYMBOL_UNDEFINED: {
-                error("Symbol undefined!");
-                break;
-            }
-            default: {
 
-                error("Unknown error!");
-                break;
-            }
-        }
-    }
-}
 
 using std::string;
 using std::set;
@@ -67,30 +50,33 @@ public:
     template<VALUE_TYPE T>
     bool Is() const;
 
-    STATUS Cast(TypeInfo &t) {
+    int GetTypeName() const {
+        assert(type_name);
+        assert(Is<LINK_V>() || Is<REF_V>());
+        return type_name;
+    }
+
+    STATUS Cast(const TypeInfo &t) {
+        if (t.Is<ANY_V>()) {
+            return TYPE_UNKNOWN;
+        }
         if (Is<ANY_V>()) {
             assert(!type_name);
-            assert(t.Is<ANY_V>() == false);
             type = t.type;
             type_name = t.type_name;
         } else {
             if (type != t.type || type_name != t.type_name) {
                 return TYPE_CONFLICT;
             }
-
         }
         return OK;
     }
 
-    bool IsPointer;
 
     string Format(IdentifierMap *idMap);
 
     string ToStr(IdentifierMap *idMap) const {
         string ans;
-        if (IsPointer) {
-            ans = "pointer|";
-        }
         if (type == INT_V) {
             ans += "int|";
         } else if (type == LINK_V) {
@@ -98,9 +84,9 @@ public:
         } else if (type == REF_V) {
             ans += "ref|";
         } else {
-            error("unknown type");
+            CheckStatus(TYPE_UNKNOWN);
         }
-        if (type_name)ans += idMap->nti(type_name);
+        if (type_name)ans += idMap->nti(type_name), assert(type != INT_V);
         return ans;
     }
 
@@ -117,6 +103,15 @@ public:
     string Format(IdentifierMap *idMap);
 
     FuncInfo(TypeInfo ret, vector<pair<TypeInfo, int>> formals) : retType(ret), argsType(formals) {};
+
+    TypeInfo GetRetType() const {
+        return retType;
+    }
+
+    const vector<pair<TypeInfo, int>> &GetArgsType() const {
+        return argsType;
+    }
+
 private:
     TypeInfo retType;
     vector<pair<TypeInfo, int>> argsType;
@@ -132,6 +127,23 @@ public:
 
 
     string Format(IdentifierMap *idMap);
+
+    TypeInfo GetMemType(int id) {
+        if (membersType.find(id) == membersType.end()) {
+            CheckStatus(CLASS_MEMBER_NOT_EXIST);
+        } else {
+            return membersType[id];
+        }
+    }
+
+    FuncInfo GetFunc(int id) {
+        if (funcs.find(id) == funcs.end()) {
+            CheckStatus(CLASS_MEMBER_NOT_EXIST);
+        } else {
+            return funcs[id];
+        }
+    }
+
 
 private:
     vector<int> membersOrder;
@@ -156,7 +168,11 @@ public:
 
     STATUS DeclareFunc(const string &name, const string &funcname, const TAC *func);
 
-    void CastType(string &from, const string &to);
+    void CastType(SYM *from, SYM *to, bool isInt);
+
+    void CastType(SYM *from, const TypeInfo &t);
+
+    void CheckTac(SYM *caller, SYM *callee, TAC *tac, std::function<SYM *(SYM *)> &get_sym_type);
 
     void Print();
 

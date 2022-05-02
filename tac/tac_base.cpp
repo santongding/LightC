@@ -2,6 +2,7 @@
 // Created by os on 4/30/22.
 //
 #include "tac.hpp"
+#include "def.h"
 
 int next_tmp = 0;
 TAC *tac_last, *tac_first;
@@ -90,7 +91,7 @@ void tac_print(TAC *i) {
             break;
 
         case TAC_BIND:
-            printf("%s -> %s bind with %s", i->a->ToStr().c_str(), i->b->ToStr().c_str(), i->c->ToStr().c_str());
+            printf("%s bind with %s -> %s", i->a->ToStr().c_str(), i->b->ToStr().c_str(), i->c->ToStr().c_str());
             break;
 
         case TAC_GOTO:
@@ -156,7 +157,8 @@ void tac_print(TAC *i) {
             break;
         default:
 
-            error(("unknown TAC opcode: " + std::to_string(i->op)).c_str());
+
+            error(("unknown TAC opcode: " + std::to_string(i->op)).c_str(), UNEXPECTED_ERROR);
             break;
     }
 
@@ -185,7 +187,7 @@ SYM *mk_const(int n) {
     return new SYM(SYM_CONST, n);
 }
 
-TAC *mk_tac(int op, SYM *a, SYM *b, SYM *c, bool lineno) {
+TAC *mk_tac(TAC_TYPE op, SYM *a, SYM *b, SYM *c, bool lineno) {
     TAC *t = new TAC;
 
     t->next = NULL; /* Set these for safety */
@@ -214,4 +216,14 @@ TAC *join_tac(TAC *c1, TAC *c2) {
 
     t->prev = c1;
     return c2;
+}
+
+const char *Status2Str(STATUS c) {
+    switch (c) {
+#define DEF_STATUS(v, x) case STATUS::v: return #v;
+        STATUS_TABLE()
+#undef DEF_STATUS
+        default:
+            return "??";
+    }
 }

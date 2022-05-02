@@ -1434,7 +1434,7 @@ yyreduce:
 {
 	auto tp =do_exp_list((yyvsp[-1].exp));
 	if(tp)
-	(yyval.tac) = do_exp_list((yyvsp[-1].exp))->tac;
+	(yyval.tac) = tp->tac;
 	else (yyval.tac) = NULL;
 }
 #line 1441 "bison.cpp"
@@ -1603,7 +1603,7 @@ yyreduce:
   case 58: /* expression: error  */
 #line 267 "LightC.y"
 {
-	error("Bad expression syntax");
+	CheckStatus(BAD_SYNTAX);
 	(yyval.exp)=mk_exp(NULL, NULL, NULL);
 }
 #line 1610 "bison.cpp"
@@ -1808,20 +1808,19 @@ yyreturnlab:
 
 void yyerror(char* msg)
 {
-	fprintf(stderr, "%s: line %d\n", msg, getyylineno());
-	exit(0);
+	CheckStatus(BAD_SYNTAX);
 }
 
 
 int main(int argc,   char *argv[])
 {
-	if(argc != 2)
+	if(argc != 3)
 	{
-		printf("usage: %s filename\n", argv[0]);
+		printf("usage: %s filename outputpath\n", argv[0]);
 		exit(0);
 	}
 
-	char *input, *output;
+	char *input;
 
 	input = argv[1];
 	if(freopen(input, "r", stdin)==NULL)
@@ -1830,11 +1829,8 @@ int main(int argc,   char *argv[])
 		return 0;
 	}
 
-	output=(char *)malloc(strlen(input + 10));
-	strcpy(output,input);
-	strcat(output,".s");
-
-	if(freopen(output, "w", stdout)==NULL)
+	string output =argv[2];
+	if(freopen(output.c_str(), "w", stdout)==NULL)
 	{
 		printf("error: open %s failed\n", output);
 		return 0;
@@ -1845,7 +1841,7 @@ int main(int argc,   char *argv[])
 
 	yyparse();
 	tac_dump();
-	//CheckTac(tac_first);
-
+	CheckTac(tac_first);
+	tac_dump();
 	return 0;
 }

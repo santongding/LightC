@@ -63,7 +63,7 @@ TAC *declare(SYM *type, SYM *name) {
 TAC *declare_link(SYM *type, SYM *name) {
     auto pos = type->ToStr().find_first_of('|');
     if (string("ref") != type->ToStr().substr(0, pos)) {
-        error("cannot link to a non-ref variable");
+        CheckStatus(TYPE_NEED_CLASS);
     }
 
 
