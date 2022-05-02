@@ -27,7 +27,7 @@ function pause()
 #
 unit_test="./test"
 test_check="./test_check.py"
-runner="/home/os/Documents/lang-exer/LightC/cmake-build-debug/LightC"
+runner="./build/LightC"
 
 files=$(ls $unit_test)
 for sfile in ${files}
