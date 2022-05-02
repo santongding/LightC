@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.16)
 project(LightC)
 include_directories(${PROJECT_SOURCE_DIR}/include)
-include_directories(/usr/include)
+#include_directories(/usr/include)
 
 add_library(${PROJECT_NAME}_lib STATIC
         ${PROJECT_SOURCE_DIR}/bison/lex.yy.cc
