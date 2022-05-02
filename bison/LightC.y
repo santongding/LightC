@@ -299,7 +299,7 @@ int main(int argc,   char *argv[])
 	string output =argv[2];
 	if(freopen(output.c_str(), "w", stdout)==NULL)
 	{
-		printf("error: open %s failed\n", output);
+		printf("error: open %s failed\n", output.c_str());
 		return 0;
 	}
 
