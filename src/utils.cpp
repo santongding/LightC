@@ -2,17 +2,9 @@
 // Created by os on 5/3/22.
 //
 
-#include "utils.h"
+#include "utils.hpp"
 
-const char *Status2Str(STATUS c) {
-    switch (c) {
-#define DEF_STATUS(v, x) case STATUS::v: return #v;
-        STATUS_TABLE()
-#undef DEF_STATUS
-        default:
-            return "??";
-    }
-}
+
 int _user_line =0;
 void setlineno(int l){
     _user_line = l;

@@ -4,7 +4,7 @@
 #include <string>
 #include <cassert>
 #include "def.h"
-#include "utils.h"
+#include "utils.hpp"
 
 using std::string;
 /* type of symbol */

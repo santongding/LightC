@@ -10,7 +10,7 @@
 #include "unordered_map"
 #include "vector"
 #include "cassert"
-#include "utils.h"
+#include "utils.hpp"
 
 using std::pair;
 using std::string;

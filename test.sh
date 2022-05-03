@@ -3,7 +3,7 @@
 
 #获取文件夹下所有文件
 #
-unit_test="./test"
+unit_test="./test/tac"
 test_check="./test_check.py"
 runner="./build/LightC"
 

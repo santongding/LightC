@@ -12,7 +12,7 @@
 #include "tac.hpp"
 #include "vector"
 #include "def.h"
-#include "utils.h"
+#include "utils.hpp"
 #include "TypeInfo.hpp"
 
 using std::string;

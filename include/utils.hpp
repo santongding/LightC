@@ -1,13 +1,13 @@
 //
 // Created by os on 5/3/22.
 //
+#ifndef LIGHTC_UTILS_HPP
+#define LIGHTC_UTILS_HPP
 
 #include "string"
 using std::string;
 
-#ifndef LIGHTC_UTILS_H
-#define LIGHTC_UTILS_H
-#define STATUS_TABLE() \
+#define TABLE() \
 DEF_STATUS(UNEXPECTED_ERROR,-1)         \
 DEF_STATUS(OK,0) \
 DEF_STATUS(SYMBOL_REPEAT,1) \
@@ -24,11 +24,20 @@ DEF_STATUS(FUN_NOT_RETURN,11)
 
 enum STATUS {
 #define DEF_STATUS(v, x) v=x,
-    STATUS_TABLE()
+    TABLE()
 #undef DEF_STATUS
 };
 
-extern const char *Status2Str(STATUS c) ;
+inline const char *Status2Str(STATUS c) {
+    switch (c) {
+#define DEF_STATUS(v, x) case STATUS::v: return #v;
+        TABLE()
+#undef DEF_STATUS
+        default:
+            return "??";
+    }
+}
+#undef TABLE
 
 void error(const char *str, int code);
 
@@ -40,4 +49,4 @@ void CheckStatus(STATUS s);
 
 int getlineno();
 
-#endif //LIGHTC_UTILS_H
+#endif //LIGHTC_UTILS_HPP
