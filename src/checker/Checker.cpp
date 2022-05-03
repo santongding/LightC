@@ -95,7 +95,7 @@ void CheckTac(const TAC *tac) {
         CheckStatus(SYMBOL_UNDEFINED);
     };
 
-    for (const TAC *now = tac; now; now = now->next) {
+    for (TAC *now = const_cast<TAC *>(tac); now; now = now->next) {
         if (now->linenum > 0) {
             setlineno(now->linenum);
         }
@@ -178,6 +178,10 @@ void CheckTac(const TAC *tac) {
             case TAC_LE:
             case TAC_GT:
             case TAC_GE : {
+                if (now->b->IsConst()) {
+                    assert(!now->c->IsConst());
+                    std::swap(now->b, now->c);
+                }
                 typeManager.CastType(get_type_sym(now->b), get_type_sym(now->c), true);
                 typeManager.CastType(get_type_sym(now->a), get_type_sym(now->b), true);
             }

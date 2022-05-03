@@ -18,6 +18,8 @@ enum AsmOpValueType {
     None = 0,
     Imm,
     FP,
+    SP,
+    RA,
     Args,
     CallerSaved,
     CalleeSaved,
@@ -29,17 +31,21 @@ public:
     AsmOpValue() : type(None), value(0) {}
 
     AsmOpValue(AsmOpValueType t) : type(t), value(0) {
-        assert(t == FP);
+        assert(t == FP||t==SP);
         assert(t != Label);
     }
 
     AsmOpValue(AsmOpValueType t, int v) : type(t), value(v) {
-        assert(!(t == FP));
+        assert(!(t == FP||t==SP));
         assert(t != Label);
     }
 
     AsmOpValue(const std::string &s) :  value(0), label(s) {
         type=Label;
+    }
+    AsmOpValue(int imm){
+        value=imm;
+        type = Imm;
     }
 
     string Dump(AsmValueType target);

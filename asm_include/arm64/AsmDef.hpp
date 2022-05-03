@@ -12,21 +12,26 @@
 
 using std::string;
 using std::vector;
+#define INSTRUCTION_WIDTH 8
 
 #define TABLE() \
 DEF(JR, STRING,NONE,NONE,"BL %0") \
-DEF(LOAD,REG,REG,IMM,"LDR %0,[%1,%2]")     \
-DEF(STORE,REG,REG,IMM,"STR %0,[%1,%2]")    \
-DEF(PUSH,REG,NONE,NONE,"PUSH {%0}")   \
-DEF(POP,REG,NONE,NONE,"POP {%0}")    \
+DEF(LOAD,REG,REG,IMM,"LDRQ %0,[%1,%2]")     \
+DEF(STORE,REG,REG,IMM,"STRQ %0,[%1,%2]")    \
+DEF(PUSH,REG,NONE,NONE,"str {%0} [sp,-8]")        \
+DEF(PUSHI,IMM,NONE,NONE,"str {%0} [sp,-8]")   \
+DEF(POP,NONE,NONE,NONE,"add sp,sp,8")    \
 DEF(BNZ,REG,STRING,NONE,"CMP %0 0x0\nBNE %1")  \
 DEF(ADD,REG,REG,REG,"ADD %0 %1 %2")      \
 DEF(ADDI,REG,REG,IMM,"ADDI %0 %1 %2")\
-DEF(RET,NONE,NONE,NONE,"RET")
+DEF(RET,NONE,NONE,NONE,"RET")     \
+DEF(MOV,REG,REG,NONE,"MOV %0 %1")
 
 inline string Get_FP_REG_NAME() {
     return "x29";
 }
+
+
 
 
 inline vector<string> Get_ARG_REG_NAME() {
