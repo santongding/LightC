@@ -4,23 +4,14 @@
 
 #ifndef LIGHTC_ASMDUMP_HPP
 #define LIGHTC_ASMDUMP_HPP
+
 #include "AsmDef.hpp"
-#include "object.h"
 #include "string"
+#include "cassert"
+
 using std::string;
 
 
-enum AsmValueType{
-    NONE = 0,
-    STRING,
-    REG,
-    IMM
-
-};
-struct AsmOpTypePair {
-    AsmValueType t0, t1, t2;
-    std::string asmcode;
-};
 
 
 enum AsmOpValueType {
@@ -39,17 +30,20 @@ public:
 
     AsmOpValue(AsmOpValueType t) : type(t), value(0) {
         assert(t == FP);
-        assert(t!=Label);
+        assert(t != Label);
     }
 
     AsmOpValue(AsmOpValueType t, int v) : type(t), value(v) {
         assert(!(t == FP));
-        assert(t!=Label);
+        assert(t != Label);
     }
-    AsmOpValue(AsmOpValueType t, const std::string &s) : type(t), value(0),label(s) {
-        assert(t==Label);
+
+    AsmOpValue(const std::string &s) :  value(0), label(s) {
+        type=Label;
     }
-    string Dump();
+
+    string Dump(AsmValueType target);
+
     AsmOpValueType type;
     int value;
     std::string label;
@@ -57,16 +51,18 @@ public:
 
 class AsmCode {
 public:
-    AsmCode(AsmType type) : type(type) {
+    AsmCode(AsmType type, AsmOpValue _v0 = AsmOpValue(), AsmOpValue _v1 = AsmOpValue(), AsmOpValue _v2 = AsmOpValue())
+            : type(type) {
+        v[0] = _v0;
+        v[1] = _v1;
+        v[2] = _v2;
     }
 
-    AsmCode(AsmType type, AsmOpValue _v0 = AsmOpValue(), AsmOpValue _v1 = AsmOpValue(), AsmOpValue _v2 = AsmOpValue())
-            : type(type), v0(_v0), v1(_v1), v2(_v2) {
-    }
     string Dump();
+
 private:
     AsmType type;
-    AsmOpValue v0, v1, v2;
+    AsmOpValue v[3];
 
 };
 

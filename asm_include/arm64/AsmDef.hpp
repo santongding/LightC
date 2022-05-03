@@ -5,14 +5,29 @@
 #ifndef LIGHTC_ASMDEF_HPP
 #define LIGHTC_ASMDEF_HPP
 
-#include "AsmDump.hpp"
+#include "AsmTypeDef.hpp"
 #include "map"
+#include "vector"
+#include "string"
 
-inline vector<string> Get_FP_REG_NAME(){
-    return{
-      "x29"
-    };
+using std::string;
+using std::vector;
+
+#define TABLE() \
+DEF(JR, STRING,NONE,NONE,"BL %0") \
+DEF(LOAD,REG,REG,IMM,"LDR %0,[%1,%2]")     \
+DEF(STORE,REG,REG,IMM,"STR %0,[%1,%2]")    \
+DEF(PUSH,REG,NONE,NONE,"PUSH {%0}")   \
+DEF(POP,REG,NONE,NONE,"POP {%0}")    \
+DEF(BNZ,REG,STRING,NONE,"CMP %0 0x0\nBNE %1")  \
+DEF(ADD,REG,REG,REG,"ADD %0 %1 %2")      \
+DEF(ADDI,REG,REG,IMM,"ADDI %0 %1 %2")\
+DEF(RET,NONE,NONE,NONE,"RET")
+
+inline string Get_FP_REG_NAME() {
+    return "x29";
 }
+
 
 inline vector<string> Get_ARG_REG_NAME() {
     return {
@@ -34,16 +49,6 @@ inline vector<string> Get_Caller_REG_NAME() {
     };
 }
 
-#define TABLE() \
-DEF(JR, STRING,NONE,NONE,"BL {0}") \
-DEF(LOAD,REG,REG,IMM,"LDR {0},[{1},{2}]")     \
-DEF(STORE,REG,REG,IMM,"STR {0},[{1},{2}]")    \
-DEF(PUSH,REG,NONE,NONE,"PUSH {{{0}}}")   \
-DEF(POP,REG,NONE,NONE,"POP {{{0}}}")    \
-DEF(BNZ,REG,STRING,NONE,"CMP {0} 0x0\nBNE {1}")  \
-DEF(ADD,REG,REG,REG,"ADD {0} {1} {2}")      \
-DEF(ADDI,REG,REG,IMM,"ADDI {0} {1} {2}")\
-DEF(RET,NONE,NONE,NONE,"RET")
 
 /********below auto generate code***********/
 
@@ -53,7 +58,7 @@ enum AsmType {
 #undef DEF
 };
 
-inline std::map<AsmType, AsmOpTypePair> GetAsmTypeMap() {
+inline std::map<AsmType, AsmInfo> GetAsmTypeMap() {
 #define DEF(v, x, y, z, s) {v,{x,y,z,s}},
     return {
             TABLE()

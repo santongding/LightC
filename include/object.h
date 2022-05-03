@@ -7,13 +7,12 @@
 
 #include "vector"
 #include "cassert"
-#include "../asm_include/arm64/AsmDef.hpp"
+#include "AsmDump.hpp"
 #include "string"
 
 using std::vector;
 
 vector<AsmCode> object_generate();
 
-void object_dump(const vector<AsmCode> codes);
 
 #endif //LIGHTC_OBJECT_H

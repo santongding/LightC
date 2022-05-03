@@ -5,6 +5,7 @@
 #include <string>
 #include "tac.hpp"
 #include "Checker.h"
+#include "object.h"
 #include "FlexLexer.h"
 yyFlexLexer lex;
 void yyerror(char* msg);
