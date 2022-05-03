@@ -9,10 +9,10 @@
 #include "cassert"
 #include "AsmDump.hpp"
 #include "string"
-
+#include "tac_def.h"
 using std::vector;
 
-vector<AsmCode> object_generate();
+void tac_object_generate(TAC * tac);
 
 
 #endif //LIGHTC_OBJECT_H

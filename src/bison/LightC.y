@@ -303,6 +303,7 @@ int main(int argc,   char *argv[])
 	yyparse();
 	tac_dump();
 	CheckTac(tac_first);
-	tac_dump();
+	//tac_dump();
+	tac_object_generate(tac_first);
 	return 0;
 }

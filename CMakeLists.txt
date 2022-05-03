@@ -15,6 +15,7 @@ add_library(${PROJECT_NAME}_lib STATIC
         src/checker/TypeManager.cpp
         src/utils.cpp
         src/object/AsmDump.cpp
+        src/object/object.cpp
         )
 
 add_executable(LightC src/bison/bison.cpp)

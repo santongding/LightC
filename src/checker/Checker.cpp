@@ -190,7 +190,12 @@ void CheckTac(const TAC *tac) {
                 lstRetScope = scope;
             }
                 break;
+            case TAC_ACTUAL:
+            case TAC_LABEL:
+            case TAC_IFZ:
+                break;
             default:
+                assert(false);
                 break;
         }
     }
