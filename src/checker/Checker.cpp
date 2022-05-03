@@ -19,12 +19,12 @@ struct sym_info {
 };
 
 void CheckTac(const TAC *tac) {
-    setyylineno(1);
+    setlineno(1);
 
     typeManager.Init();
     for (const TAC *now = tac; now; now = now->next) {
         if (now->linenum > 0) {
-            setyylineno(now->linenum);
+            setlineno(now->linenum);
         }
         if (now->op == TAC_BEGINCLASS) {
             CheckStatus(typeManager.DeclareClass(now->a->ToStr()));
@@ -34,10 +34,10 @@ void CheckTac(const TAC *tac) {
 
         int scope = 0;//1 for class 2 for func
         string lstClass;
-        setyylineno(1);
+        setlineno(1);
         for (const TAC *now = tac; now; now = now->next) {
             if (now->linenum > 0) {
-                setyylineno(now->linenum);
+                setlineno(now->linenum);
             }
             if (now->op == TAC_BEGINCLASS) {
                 assert(scope == 0);
@@ -69,7 +69,7 @@ void CheckTac(const TAC *tac) {
     typeManager.Print();
 
     int scope = 0;
-    setyylineno(1);
+    setlineno(1);
     int lstRetScope = 0;
 
     std::vector<std::set<sym_info>> sym_tables;
@@ -97,7 +97,7 @@ void CheckTac(const TAC *tac) {
 
     for (const TAC *now = tac; now; now = now->next) {
         if (now->linenum > 0) {
-            setyylineno(now->linenum);
+            setlineno(now->linenum);
         }
         switch (now->op) {
             case TAC_BEGINCLASS:

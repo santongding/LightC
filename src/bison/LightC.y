@@ -9,18 +9,11 @@
 yyFlexLexer lex;
 void yyerror(char* msg);
 int yylex(){
-return lex.yylex();
+int ans=lex.yylex();
+setlineno(lex.lineno());
+return ans;
 }
 
-int user_lineno = -1;
-int getyylineno() {
-    if (user_lineno != -1)return user_lineno;
-    return lex.lineno();
-}
-
-void setyylineno(int l) {
-    user_lineno = l;
-}
 
 %}
 

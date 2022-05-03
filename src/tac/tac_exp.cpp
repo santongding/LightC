@@ -243,11 +243,3 @@ EXP *flush_exp(EXP *x) {
     return x;
 }
 
-void error(const char *str,int code) {
-    fprintf(stderr, "line %d:  error<%d>: %s\n", getyylineno(), code,str);
-    exit(code);
-}
-
-void error(const string &str,int code) {
-    error(str.c_str(),code);
-}

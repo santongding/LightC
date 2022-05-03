@@ -196,8 +196,9 @@ TAC *mk_tac(TAC_TYPE op, SYM *a, SYM *b, SYM *c, bool lineno) {
     t->a = a;
     t->b = b;
     t->c = c;
-    if (lineno)
-        t->linenum = getyylineno();
+    if (lineno){
+        t->linenum = getlineno();
+    }
     else t->linenum = -1;
 
     return t;
@@ -218,12 +219,3 @@ TAC *join_tac(TAC *c1, TAC *c2) {
     return c2;
 }
 
-const char *Status2Str(STATUS c) {
-    switch (c) {
-#define DEF_STATUS(v, x) case STATUS::v: return #v;
-        STATUS_TABLE()
-#undef DEF_STATUS
-        default:
-            return "??";
-    }
-}

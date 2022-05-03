@@ -117,7 +117,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 28 "LightC.y"
+#line 21 "LightC.y"
 
 	char character;
 	char *string;

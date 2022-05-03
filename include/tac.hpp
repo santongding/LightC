@@ -4,6 +4,7 @@
 #include <string>
 #include <cassert>
 #include "def.h"
+#include "utils.h"
 
 using std::string;
 /* type of symbol */
@@ -182,10 +183,6 @@ EXP *flush_exp(EXP *x);
 
 TAC *mk_block(TAC *x);
 
-void error(const char *str, int code);
-
-void error(const string &str, int code);
-
 TAC *do_test(EXP *exp, TAC *stmt1, TAC *stmt2);
 
 TAC *do_while(EXP *exp, TAC *stmt);
@@ -201,10 +198,5 @@ TAC *mk_func(SYM *type, SYM *name, TAC *tac, TAC *block);
 TAC *mk_class(SYM *name, TAC *tac);
 
 
-inline void CheckStatus(STATUS s) {
-    if (s != OK) {
-        error(Status2Str(s), s);
-    }
-}
 
 #endif //LIGHTC_TAC_HPP
