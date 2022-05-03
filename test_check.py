@@ -6,11 +6,11 @@ if __name__ == "__main__":
 
     if not name[0].isdigit():
         exit(1)
-    err_code = eval(name[0])
+    err_code = int(name[0])
     code = eval(sys.argv[2])
 
-    #print(code)
-    #print(err_code)
+    # print(code)
+    # print(err_code)
     if code != err_code:
         exit(2)
     if code == 0:
@@ -24,9 +24,9 @@ if __name__ == "__main__":
 
     line = sys.argv[3]
     line = eval(line.split()[1].split(':')[0])
-    #print(line)
-    #print(err_line)
+    # print(line)
+    # print(err_line)
     if line != err_line:
         exit(3)
-    #print("success")
+    # print("success")
     exit(0)
