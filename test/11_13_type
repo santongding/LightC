@@ -1,0 +1,20 @@
+class a{
+    x:int;
+    z:link b;
+    y:int;
+    a f(i:b,j:int){
+        this.y;
+        this.y=this.y+i.x(j);
+        x:new b;
+        if(1){
+            this.y=this.y+i.x(j);
+            z:int;
+            z=this.x+this.y;
+            return this;
+        }
+    }
+}
+
+class b{
+    int x(i:int){}
+}

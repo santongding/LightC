@@ -14,7 +14,6 @@
 #include "def.h"
 
 
-
 using std::string;
 using std::set;
 using std::pair;
@@ -46,15 +45,17 @@ public:
 
     TypeInfo(VALUE_TYPE t);
 
-
     template<VALUE_TYPE T>
-    bool Is() const;
+    bool Is() const {
+        return type == T;
+    }
 
     int GetTypeName() const {
         assert(type_name);
         assert(Is<LINK_V>() || Is<REF_V>());
         return type_name;
     }
+
 
     STATUS Cast(const TypeInfo &t) {
         if (t.Is<ANY_V>()) {

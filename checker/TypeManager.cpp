@@ -44,13 +44,9 @@ TypeInfo::TypeInfo(VALUE_TYPE t, int n) {
 TypeInfo::TypeInfo(VALUE_TYPE t) {
     type_name = 0;
     type = t;
-    assert(t == INT_V || t == ANY_V);
+    assert(t == INT_V || t == ANY_V || t == INVALID_V);
 }
 
-template<VALUE_TYPE T>
-bool TypeInfo::Is() const {
-    return type == T;
-}
 
 string TypeInfo::Format(IdentifierMap *idMap) {
     std::stringstream stringstream;
@@ -100,7 +96,7 @@ STATUS ClassInfo::DeclareMember(const int name, const TypeInfo &type) {
 STATUS ClassInfo::DeclareFunc(const int name, TypeInfo ret, vector<pair<TypeInfo, int>> ts) {
     assert(ts.size() >= 1);
     if (membersType.find(name) == membersType.end() && funcs.find(name) == funcs.end()) {
-        funcs[name] = FuncInfo(ret, vector<pair<TypeInfo, int>>(ts.begin() , ts.end()));
+        funcs[name] = FuncInfo(ret, vector<pair<TypeInfo, int>>(ts.begin(), ts.end()));
         return OK;
     } else {
         return SYMBOL_REPEAT;
@@ -194,9 +190,6 @@ STATUS TypeManager::DeclareFunc(const string &name, const string &funcname, cons
     CheckStatus(TryDecodeType(func->a->ToStr(), ret));
     vector<pair<TypeInfo, int>> ts;
     TAC *first = func->next;
-    if (first->op == TAC_BEGINBLOCK) {
-        first = first->next;
-    }
     assert(first && first->op == TAC_FORMAL);
     auto thistype = first->a->ToStr();
     assert(first->b->ToStr() == "this");

@@ -9,5 +9,5 @@ class a{
 }
 
 class b{
-    int x(i:int){return 3;}
+    int x(i:int){return ;}
 }

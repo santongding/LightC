@@ -5,7 +5,6 @@
 #include "TypeManager.h"
 #include "Checker.h"
 #include "string"
-#include "unordered_set"
 
 TypeManager typeManager;
 
@@ -71,8 +70,11 @@ void CheckTac(const TAC *tac) {
 
     int scope = 0;
     setyylineno(1);
+    int lstRetScope = 0;
 
     std::vector<std::set<sym_info>> sym_tables;
+
+    TypeInfo curRetType(INVALID_V);
 
     auto in_sym_tables = [&sym_tables](const string &s) {
         for (auto &t: sym_tables) {
@@ -99,18 +101,16 @@ void CheckTac(const TAC *tac) {
         }
         switch (now->op) {
             case TAC_BEGINCLASS:
-            case TAC_BEGINFUNC:
                 scope++;
                 break;
             case TAC_ENDCLASS:
-            case TAC_ENDFUNC:
                 scope--;
                 break;
 
             case TAC_NEW:
             case TAC_DECLARE:
             case TAC_FORMAL: {
-                if (scope <= 2)break;
+                if (scope <= 1)break;
 
                 auto name = now->b->ToStr();
                 if (in_sym_tables(name)) {
@@ -122,16 +122,32 @@ void CheckTac(const TAC *tac) {
 
             }
                 break;
+            case TAC_BEGINFUNC:
             case TAC_BEGINBLOCK: {
-                assert(scope >= 2);
+                if (scope == 1) {
+                    lstRetScope = 0;
+                    assert(curRetType.Is<INVALID_V>());
+                    typeManager.TryDecodeType(now->a->ToStr(), curRetType);
+                }
+                assert(curRetType.Is<INVALID_V>() == false);
+                assert(scope >= 1);
                 scope++;
                 sym_tables.emplace_back();
             }
                 break;
+            case TAC_ENDFUNC:
             case TAC_ENDBLOCK: {
+
                 scope--;
                 assert(scope >= 1);
                 sym_tables.pop_back();
+                assert(curRetType.Is<INVALID_V>() == false);
+                if (scope == 1) {
+                    curRetType = TypeInfo(INVALID_V);
+                    if (lstRetScope != 3) {
+                        CheckStatus(FUN_NOT_RETURN);
+                    }
+                }
             }
                 break;
             case TAC_BIND:
@@ -149,11 +165,6 @@ void CheckTac(const TAC *tac) {
                 break;
             case TAC_COPY:
             case TAC_NEG: {
-                /*auto nx = now->a->ToStr();
-                auto ny = now->b->ToStr();
-                if (!in_sym_tables(nx) || !in_sym_tables(ny)) {
-                    CheckStatus(SYMBOL_UNDEFINED);
-                }*/
                 typeManager.CastType(get_type_sym(now->a), get_type_sym(now->b), now->op == TAC_NEG);
             }
                 break;
@@ -167,18 +178,18 @@ void CheckTac(const TAC *tac) {
             case TAC_LE:
             case TAC_GT:
             case TAC_GE : {
-                /*auto nx = now->a->ToStr();
-                auto ny = now->b->ToStr();
-                auto nz = now->c->ToStr();
-
-                if (!in_sym_tables(nx) || !in_sym_tables(ny) || !in_sym_tables(nz)) {
-                    CheckStatus(SYMBOL_UNDEFINED);
-                }*/
                 typeManager.CastType(get_type_sym(now->b), get_type_sym(now->c), true);
                 typeManager.CastType(get_type_sym(now->a), get_type_sym(now->b), true);
             }
                 break;
-
+            case TAC_RETURN: {
+                assert(scope >= 2);
+                assert(curRetType.Is<INVALID_V>() == false);
+                auto type = get_type_sym(now->a);
+                typeManager.CastType(type, curRetType);
+                lstRetScope = scope;
+            }
+                break;
             default:
                 break;
         }
