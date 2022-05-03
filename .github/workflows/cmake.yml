@@ -25,7 +25,7 @@ jobs:
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
     - name: Update
-      run:  sudo apt-get update && sudo apt-get upgrade flex && sudo apt-get install libfl-dev
+      run:  sudo apt-get update && sudo apt-get upgrade flex && sudo apt-get upgrade bison && sudo apt-get install libfl-dev
   
     - name: Generate
       run:  bash ./build_bison.sh
