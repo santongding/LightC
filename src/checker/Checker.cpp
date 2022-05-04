@@ -129,7 +129,10 @@ void CheckTac(const TAC *tac) {
                 sym_tables.back().insert({name, now->a});
 
                 if(now->op==TAC_NEW){
-                    now->a=new SYM(SYM_CONST,typeManager.Str2ID(now->a->ToStr()));
+                    auto s = now->a->ToStr();
+                    auto pos = s.find_first_of("|");
+                    s = s.substr(pos+1);
+                    now->a=new SYM(SYM_CONST,typeManager.Str2ID(s));
                 }
 
             }
@@ -177,8 +180,8 @@ void CheckTac(const TAC *tac) {
                 if(now->op==TAC_CALL){// set to func name
                     auto s = get_type_sym(now->b)->ToStr();
                     auto pos = s.find_first_of("|");
-                    s = s.substr(pos);
-                    now->b->SetStr(s);
+                    s = s.substr(pos+1);
+                    now->b = new SYM(SYM_SYMBOL,s);
                 }else {
                     now->c=new SYM(SYM_CONST,typeManager.Str2ID(now->c->ToStr()));
                 }

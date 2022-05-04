@@ -8,10 +8,10 @@
 
 const std::string TEMP_VALUE_PREFIX="#t";
 const std::string MEM_FUNC_PREFIX="__LIGHTC_FUNC_";
-const std::string LOCATE_FUNC = "__LIGTHC_LOCATE";
+const std::string LOCATE_FUNC = "__LIGHTC_LOCATE";
 
-const std::string NEW_FUNC = "__LIGTHC_NEW";
-const std::string BIND_FUNC = "__LIGTHC_BIND";
+const std::string NEW_FUNC = "__LIGHTC_NEW";
+const std::string BIND_FUNC = "__LIGHTC_BIND";
 
 enum VALUE_TYPE {
     INVALID_V = 0,
