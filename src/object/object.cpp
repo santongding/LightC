@@ -113,45 +113,6 @@ private:
         }
 
 
-        vector<AsmCode> release(RegManager *ctx) {
-            switch (pos) {
-                case ORIGIN:
-                    return {};
-                    break;
-                case CALLER: {
-
-                    ctx->caller_vars[value.value] = "";
-
-                    if (!declareInStk()) {
-                        return {};
-                    } else {
-                        assert(stkPos.second.value == ctx->pageVarNum);
-                        ctx->pageVarNum--;
-                        return {{ASM_POP}};
-                    }
-                }
-                    break;
-                case CALLEE: {
-
-                    assert(stkPos.second.value == ctx->pageVarNum);
-                    ctx->pageVarNum--;
-                    ctx->callee_vars[value.value] = "";
-                    return {{ASM_POPR, value}};
-                }
-                    break;
-                case STK: {
-
-                    assert(stkPos.second.value == ctx->pageVarNum);
-                    ctx->pageVarNum--;
-                    return {{ASM_POP}};
-                }
-                    break;
-                default:
-                    assert(false);
-            }
-            return {};
-        }
-
         vector<AsmCode> releaseCallee() {
             assert(pos == CALLEE);
             assert(declareInStk());
@@ -171,17 +132,10 @@ private:
             }
             vector<AsmCode> ans;
             switch (pos) {
-                case CALLER:
-                    if (!declareInStk()) {
-                        stkPos = {{FP},
-                                  {-(++ctx->pageVarNum * INSTRUCTION_WIDTH)}};
-                        assert(needWriteBack);
-                        ans.push_back({ASM_PUSH, value});
-
-                    } else {
-                        ans.push_back({ASM_STORE, value, stkPos.first, stkPos.second});
-                        return ans;
-                    }
+                case CALLER: {
+                    ans.push_back({ASM_STORE, value, stkPos.first, stkPos.second});
+                    return ans;
+                }
                     break;
                 default:
                     assert(false);
@@ -397,13 +351,6 @@ private:
         auto &tp = vars[caller_vars[id[0]]];
         caller_vars[id[0]] = name;
         return {tp.persist(this), {CallerSaved, id[0]}};
-    }
-
-    vector<AsmCode> releaseVar(const string &name) {
-        assert(exist(name));
-        auto info = vars[name];
-        vars.erase(name);
-        return info.release(this);
     }
 
 
