@@ -6,7 +6,7 @@
 #define LIGHTC_DEF_H
 
 
-
+const std::string TEMP_VALUE_PREFIX="#t";
 
 enum VALUE_TYPE {
     INVALID_V = 0,

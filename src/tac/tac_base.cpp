@@ -176,10 +176,7 @@ void tac_dump() {
 
 string mk_tmp() {
 
-    char name[12];
-
-    sprintf(name, "t%d", next_tmp++); /* Set up text */
-    return name;
+    return TEMP_VALUE_PREFIX + std::to_string(next_tmp++);
 }
 
 
@@ -196,10 +193,9 @@ TAC *mk_tac(TAC_TYPE op, SYM *a, SYM *b, SYM *c, bool lineno) {
     t->a = a;
     t->b = b;
     t->c = c;
-    if (lineno){
+    if (lineno) {
         t->linenum = getlineno();
-    }
-    else t->linenum = -1;
+    } else t->linenum = -1;
 
     return t;
 }

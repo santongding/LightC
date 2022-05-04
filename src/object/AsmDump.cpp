@@ -72,6 +72,11 @@ string AsmCode::Dump() {
             asminfo.asmcode.replace(pos, tps[i].length(), str);
 
         }
+        if(str!=""){
+            assert(bg);
+        }else{
+            assert(!bg);
+        }
     }
     return asminfo.asmcode;
 }
