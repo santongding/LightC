@@ -20,7 +20,6 @@ enum AsmOpValueType {
     FP,
     SP,
     RA,
-    Args,
     Zero,
     CallerSaved,
     CalleeSaved,

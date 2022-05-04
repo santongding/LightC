@@ -9,7 +9,8 @@ enum AsmValueType {
     NONE = 0,
     STRING,
     REG,
-    IMM
+    IMM,
+    REG_OR_IMM
 
 };
 

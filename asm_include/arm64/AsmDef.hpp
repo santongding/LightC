@@ -15,26 +15,37 @@ using std::vector;
 #define INSTRUCTION_WIDTH 8
 
 #define TABLE() \
-DEF(JR, STRING,NONE,NONE,"BL %0") \
-DEF(LOAD,REG,REG,IMM,"LDRQ %0,[%1,%2]")     \
-DEF(STORE,REG,REG,IMM,"STRQ %0,[%1,%2]")    \
-DEF(PUSH,REG,NONE,NONE,"str {%0} [sp,-8]")        \
-DEF(PUSHI,IMM,NONE,NONE,"str {%0} [sp,-8]")   \
-DEF(POP,NONE,NONE,NONE,"add sp,sp,8")       \
-DEF(POPR,REG,NONE,NONE,"pop {%0}")  \
-DEF(BNZ,REG,STRING,NONE,"CMP %0 0x0\nBNE %1")  \
-DEF(ADD,REG,REG,REG,"ADD %0 %1 %2")      \
-DEF(ADDI,REG,REG,IMM,"ADDI %0 %1 %2")\
-DEF(RET,NONE,NONE,NONE,"RET")     \
-DEF(MOV,REG,REG,NONE,"MOV %0 %1") \
-DEF(MOVI,REG,IMM,NONE,"MOV %0 %1")
+ DEF(ASM_JR, STRING,NONE,NONE,"BL %0") \
+ DEF(ASM_JUMP, STRING,NONE,NONE,"B %0")\
+ DEF(ASM_LABEL, STRING,NONE,NONE,"%0:") \
+ DEF(ASM_LOAD,REG,REG,IMM,"LDRQ %0,[%1,%2]")     \
+ DEF(ASM_STORE,REG,REG,IMM,"STRQ %0,[%1,%2]")    \
+ DEF(ASM_PUSH,REG_OR_IMM,NONE,NONE,"str {%0} [sp,-8]")     \
+ DEF(ASM_POP,NONE,NONE,NONE,"add sp,sp,8")       \
+ DEF(ASM_POPR,REG,NONE,NONE,"pop {%0}")  \
+ DEF(ASM_BNZ,REG_OR_IMM,STRING,NONE,"CMP %0 0x0\nBNE %1")         \
+ DEF(ASM_RET,NONE,NONE,NONE,"RET")     \
+ DEF(ASM_MOV,REG,REG_OR_IMM,NONE,"MOV %0 %1")\
+ DEF(ASM_ADD,REG,REG,REG_OR_IMM,"ADD %0 %1 %2")  \
+ DEF(ASM_SUB,REG,REG,REG_OR_IMM,"SUB %0 %1 %2")  \
+ DEF(ASM_MUL,REG,REG,REG_OR_IMM,"MUL %0 %1 %2")\
+ DEF(ASM_DIV,REG,REG,REG_OR_IMM,"DIV %0 %1 %2")\
+ DEF(ASM_EQ,REG,REG,REG_OR_IMM,"EQ %0 %1 %2")    \
+ DEF(ASM_NE,REG,REG,REG_OR_IMM,"NE %0 %1 %2")    \
+ DEF(ASM_LT,REG,REG,REG_OR_IMM,"LT %0 %1 %2")    \
+ DEF(ASM_LE,REG,REG,REG_OR_IMM,"LE %0 %1 %2")    \
+ DEF(ASM_GT,REG,REG,REG_OR_IMM,"GT %0 %1 %2")\
+ DEF(ASM_GE,REG,REG,REG_OR_IMM,"GE %0 %1 %2")    \
+ DEF(ASM_NEG,REG,REG_OR_IMM,NONE,"NEG %0 %1")    \
+ DEF(ASM_CLEAR,NONE,NONE,NONE,"CLEAR") \
+ DEF(ASM_LOCATE,REG,REG,IMM,"Locate %0 %1 -> %2")
 
 inline string Get_FP_REG_NAME() {
     return "x29";
 }
 
 
-const int Args_Reg_Num=8;
+const int Args_Reg_Num = 8;
 
 inline vector<string> Get_Callee_REG_NAME() {
     return {

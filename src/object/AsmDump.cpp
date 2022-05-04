@@ -5,7 +5,7 @@
 #include "AsmDump.hpp"
 #include "AsmDef.hpp"
 
-auto arg_regs = Get_ARG_REG_NAME();
+auto arg_regs_num = Args_Reg_Num;
 auto callee_regs = Get_Callee_REG_NAME();
 auto caller_regs = Get_Caller_REG_NAME();
 auto fp_name = Get_FP_REG_NAME();
@@ -24,26 +24,21 @@ string AsmOpValue::Dump(AsmValueType target) {
             return label;
             break;
         case Imm:
-            assert(target == IMM);
+            assert(target == IMM||target==REG_OR_IMM);
             return std::to_string(value);
             break;
         case FP:
-            assert(target == REG);
+            assert(target == REG||target==REG_OR_IMM);
             assert(value == 0);
             return fp_name;
             break;
-        case Args:
-            assert(target == REG);
-            assert(value < arg_regs.size());
-            return arg_regs[value];
-            break;
         case CallerSaved:
-            assert(target == REG);
+            assert(target == REG||target==REG_OR_IMM);
             assert(value < caller_regs.size());
             return caller_regs[value];
             break;
         case CalleeSaved:
-            assert(target == REG);
+            assert(target == REG||target==REG_OR_IMM);
             assert(value < callee_regs.size());
             return callee_regs[value];
             break;

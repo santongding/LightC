@@ -100,17 +100,25 @@ void CheckTac(const TAC *tac) {
             setlineno(now->linenum);
         }
         switch (now->op) {
-            case TAC_BEGINCLASS:
+            case TAC_BEGINCLASS: {
+
                 scope++;
+            }
                 break;
-            case TAC_ENDCLASS:
+            case TAC_ENDCLASS: {
                 scope--;
+
+            }
                 break;
 
             case TAC_NEW:
             case TAC_DECLARE:
             case TAC_FORMAL: {
-                if (scope <= 1)break;
+                if (scope <= 1) {
+                    now->prev->next = now->next;
+                    now->next->prev = now->prev;
+                    break;
+                }
 
                 auto name = now->b->ToStr();
                 if (in_sym_tables(name)) {
@@ -120,6 +128,10 @@ void CheckTac(const TAC *tac) {
                 CheckStatus(typeManager.TryDecodeType(now->a->ToStr(), ti));
                 sym_tables.back().insert({name, now->a});
 
+                if(now->op==TAC_NEW){
+                    now->a=new SYM(SYM_CONST,typeManager.Str2ID(now->a->ToStr()));
+                }
+
             }
                 break;
             case TAC_BEGINFUNC:
@@ -128,6 +140,7 @@ void CheckTac(const TAC *tac) {
                     lstRetScope = 0;
                     assert(curRetType.Is<INVALID_V>());
                     typeManager.TryDecodeType(now->a->ToStr(), curRetType);
+
                 }
                 assert(curRetType.Is<INVALID_V>() == false);
                 assert(scope >= 1);
@@ -161,6 +174,14 @@ void CheckTac(const TAC *tac) {
                 }
                 typeManager.CheckTac(get_type_sym(now->a), get_type_sym(now->b), const_cast<TAC *>(now), get_type_sym);
 
+                if(now->op==TAC_CALL){// set to func name
+                    auto s = get_type_sym(now->b)->ToStr();
+                    auto pos = s.find_first_of("|");
+                    s = s.substr(pos);
+                    now->b->SetStr(s);
+                }else {
+                    now->c=new SYM(SYM_CONST,typeManager.Str2ID(now->c->ToStr()));
+                }
             }
                 break;
             case TAC_COPY:

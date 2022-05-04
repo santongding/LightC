@@ -44,6 +44,10 @@ public:
 
     void Print();
 
+    int Str2ID(const string &s){
+        return idMap.itn(s);
+    }
+
 
 private:
 
