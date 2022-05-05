@@ -44,8 +44,12 @@ RegManager regManager;
 
 
 int pageVarSum = 0;
+string cur_mem_func_prefix = "";
 
 void begin_func(const TAC *tac) {
+
+    assert(cur_mem_func_prefix != "");
+    append({ASM_LABEL, {cur_mem_func_prefix + tac->b->ToStr()}});
     regManager = RegManager();
     pageVarSum = 0;
     for (auto t = tac; t->op != TAC_ENDFUNC; t = t->next) {
@@ -84,7 +88,7 @@ void func_call(const TAC *tac) {
     assert(actuals.size());
     regManager.loadArgs(actuals);
     append({ASM_JR, {MEM_FUNC_PREFIX + tac->b->ToStr() + "_" + tac->c->ToStr()}});
-    auto r = regManager.GetOpValue(tac->a);
+    auto r = regManager.GetAssignValue(tac->a);
 
     append({ASM_MOV, r, {CallerSaved, 0}});
 
@@ -102,7 +106,7 @@ void func_ret(const TAC *tac) {
 
 void func_locate(const TAC *tac) {
     regManager.saveCaller();
-    regManager.loadArgs({ tac->b, tac->c});
+    regManager.loadArgs({tac->b, tac->c});
     append({ASM_JR, LOCATE_FUNC});
 
     auto r = regManager.GetAssignValue(tac->a);
@@ -199,8 +203,10 @@ vector<AsmCode> object_generate(const TAC *tac) {
         case TAC_ACTUAL:
             break;
         case TAC_BEGINCLASS:
+            cur_mem_func_prefix = MEM_FUNC_PREFIX + tac->a->ToStr() + "_";
             break;
         case TAC_ENDCLASS:
+            cur_mem_func_prefix = "";
             break;
         default:
             assert(false);
@@ -213,6 +219,9 @@ void tac_object_generate(TAC *tac) {
     int lstline = -1;
     setlineno(1);
 
+
+    auto asm_out =
+            fopen(ASM_SOURCE_NAME.c_str(), "w");
     for (const TAC *now = tac; now; now = now->next) {
         if (now->linenum > 0) {
             setlineno(now->linenum);
@@ -224,6 +233,8 @@ void tac_object_generate(TAC *tac) {
         auto asms = object_generate(now);
         for (auto &c: asms) {
             printf("\t%s;\n", c.Dump().c_str());
+            fprintf(asm_out, "%s;\n", c.Dump().c_str());
         }
+
     }
 }

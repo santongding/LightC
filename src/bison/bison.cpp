@@ -1575,7 +1575,7 @@ yyreduce:
   case 55: /* expression: '(' expression_list ')'  */
 #line 248 "LightC.y"
 {
-	(yyval.exp)=do_exp_list((yyvsp[-1].exp));
+	(yyval.exp)=do_exp_list((yyvsp[-1].exp),false);
 }
 #line 1581 "bison.cpp"
     break;

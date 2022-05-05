@@ -13,6 +13,8 @@ const std::string LOCATE_FUNC = "__LIGHTC_LOCATE";
 const std::string NEW_FUNC = "__LIGHTC_NEW";
 const std::string BIND_FUNC = "__LIGHTC_BIND";
 
+const std::string ASM_SOURCE_NAME =".LIGHTC_ASM.s";
+
 enum VALUE_TYPE {
     INVALID_V = 0,
     LINK_V = 1,
