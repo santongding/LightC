@@ -170,7 +170,7 @@ vector<AsmCode> object_generate(const TAC *tac) {
         case TAC_IFZ: {
 
             auto r = regManager.GetOpValue(tac->b);
-            append({ASM_BNZ, r, {tac->a->ToStr()}});
+            append({ASM_IFZ, r, {tac->a->ToStr()}});
             break;
         }
         case TAC_ENDFUNC:

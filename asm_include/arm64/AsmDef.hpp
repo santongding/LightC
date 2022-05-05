@@ -22,13 +22,13 @@ using std::vector;
  DEF(ASM_STORE,REG,REG,IMM,"STR [0],[[1],[2]]")    \
  DEF(ASM_SAVE,IMM,NONE,NONE,"STP x29,x30,[sp,#[0]]!\nMOV x29, sp")     \
  DEF(ASM_RESTORE,IMM,NONE,NONE,"LDP x29,x30,[sp],#[0]")       \
- DEF(ASM_BNZ,REG,STRING,NONE,"CMP xzr, [0]\nBNE [1]")         \
+ DEF(ASM_IFZ,REG,STRING,NONE,"CMP [0], 0\nBEQ [1]")         \
  DEF(ASM_RET,NONE,NONE,NONE,"RET")     \
  DEF(ASM_MOV,REG,REG_OR_IMM,NONE,"MOV [0], [1]")\
  DEF(ASM_ADD,REG,REG,REG_OR_IMM,"ADD [0], [1], [2]")  \
  DEF(ASM_SUB,REG,REG,REG_OR_IMM,"SUB [0] ,[1], [2]")  \
  DEF(ASM_MUL,REG,REG,REG_OR_IMM,"MUL [0], [1], [2]")\
- DEF(ASM_DIV,REG,REG,REG_OR_IMM,"DIV [0], [1], [2]")\
+ DEF(ASM_DIV,REG,REG,REG,"SDIV [0], [1], [2]")\
  DEF(ASM_EQ,REG,REG,REG_OR_IMM,"EQ [0], [1], [2]")    \
  DEF(ASM_NE,REG,REG,REG_OR_IMM,"NE [0], [1], [2]")    \
  DEF(ASM_LT,REG,REG,REG_OR_IMM,"LT [0], [1], [2]")    \

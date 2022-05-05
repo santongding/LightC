@@ -7,10 +7,10 @@ class a{
         this.y=this.y+i.x(j); //this.y = 545
         x:new b;
         if(this.y){
-            //this.y=this.y+i.x(j); //this.y=466
+            //this.y=this.y+i.x(j);
             z:int;
-            z=this.y-45;//545
-            this.x=z;//545
+            z=this.y-45;//500
+            this.x=z;//500
             return this;
         }
         return this;
@@ -25,6 +25,8 @@ class main{
     int main(){
         bb:new b;
         aa:new a;
-        return aa.f(bb,312).x;
+        x:int;
+        x = 2;
+        return aa.f(bb,312).x/x;
     }
 }
