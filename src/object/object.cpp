@@ -6,16 +6,16 @@
 #include "tac.hpp"
 #include "TypeManager.h"
 
-template<class T>
-void append(vector<T> &t, vector<T> x) {
-    for (auto &v: x) {
-        t.push_back(v);
+vector<AsmCode> _asm_codes;
+
+inline void append(vector<AsmCode> codes) {
+    for (auto &x: codes) {
+        _asm_codes.push_back(x);
     }
 }
 
-template<class T>
-void append(vector<T> &t, T x) {
-    t.push_back(x);
+inline void append(AsmCode code) {
+    _asm_codes.push_back(code);
 }
 
 
@@ -70,19 +70,12 @@ private:
         }
 
         int getStkOffset() const {
-            assert(declareInStk());
             return stkPos.second.value;
         }
 
-        bool declareInStk() const {
-            assert(stkPos.first.type == FP);
-            return stkPos.first.type == FP;
-        }
-
-        bool persistInStk() const {
+        bool inStk() const {
             if (pos == STK) {
                 assert(value.type == None);
-                assert(declareInStk());
                 return true;
             } else {
                 return false;
@@ -90,6 +83,7 @@ private:
         }
 
         bool isOrigin() const {
+            assert((!pos == ORIGIN) || needWriteBack);
             return pos == ORIGIN;
         }
 
@@ -102,39 +96,36 @@ private:
         }
 
         AsmOpValue getReg(int clk, bool isAssign) {
-            assert(persistInStk() == false);
+            assert(inStk() == false);
+            assert(isValid());
             needWriteBack |= isAssign;
             lstTs = clk;
-            if (pos == ORIGIN) {
-                assert(isAssign == false);
-                assert(value.type == Zero);
-            }
             return value;
         }
 
 
-        vector<AsmCode> releaseCallee() {
+        void releaseCallee() {
             assert(pos == CALLEE);
-            assert(declareInStk());
             assert(value.type == CalleeSaved);
-            return {{ASM_LOAD, value, stkPos.first, stkPos.second}};
+            append({{ASM_LOAD, value, stkPos.first, stkPos.second}});
         }
 
-        vector<AsmCode> persist(RegManager *ctx) {
+        void persist(RegManager *ctx) {
+            assert(isValid());
+            assert(!isOrigin());
             if (!needWriteBack) {
-                if (isOrigin()) {
-                    return {};
-                }
                 value = {};
                 pos = STK;
-                assert(declareInStk());
-                return {};
+                return;
             }
-            vector<AsmCode> ans;
             switch (pos) {
                 case CALLER: {
-                    ans.push_back({ASM_STORE, value, stkPos.first, stkPos.second});
-                    return ans;
+                    append({ASM_STORE, value, stkPos.first, stkPos.second});
+                }
+                    break;
+                case CALLEE: {
+
+                    append({ASM_SWAPRM, value, stkPos.first, stkPos.second});
                 }
                     break;
                 default:
@@ -143,36 +134,31 @@ private:
             }
             value = {};
             pos = STK;
-            return ans;
 
+            assert(isValid());
         }
 
-        vector<AsmCode> toReg(AsmOpValue &reg, RegManager *ctx) {
+        void toReg(AsmOpValue &reg, RegManager *ctx) {
+            assert(isValid());
             assert(reg.type != value.type);
-            vector<AsmCode> ans;
             assert(pos == STK || pos == ORIGIN);
 
             switch (reg.type) {
                 case CalleeSaved:
-                    if (!declareInStk()) {
-
-                        assert(pos == ORIGIN);
-                        stkPos = {{FP},
-                                  {++ctx->pageVarNum * INSTRUCTION_WIDTH}};
-                        ans.push_back({ASM_PUSH, value});
-                        ans.push_back({ASM_MOV, reg, 0});
+                    if (pos == STK) {
+                        append({ASM_SWAPRM, reg, stkPos.first, stkPos.second});
                     } else {
-                        assert(false);
+                        append({{ASM_STORE, reg, stkPos.first, stkPos.second},
+                                {ASM_MOV,   reg, 0}});
                     }
                     break;
 
                 case CallerSaved:
-                    if (!declareInStk()) {
-                        assert(pos == ORIGIN);
-                        ans.push_back({ASM_MOV, reg, 0});
+                    if (pos == ORIGIN) {
+                        append({ASM_MOV, reg, 0});
                     } else {
                         assert(pos != ORIGIN);
-                        ans.push_back({ASM_LOAD, reg, stkPos.first, stkPos.second});
+                        append({ASM_LOAD, reg, stkPos.first, stkPos.second});
                     }
                     break;
                 default:
@@ -181,11 +167,31 @@ private:
             }
             pos = type2Pos[reg.type];
             value = reg;
-            assert(persistInStk() == false);
-            return ans;
+            assert(isValid());
         }
 
     private:
+
+        bool isValid() {
+            if (stkPos.first.type != FP) {
+                return false;
+            }
+            switch (pos) {
+
+                case ORIGIN:
+                    return value.type == Zero;
+                    break;
+                case CALLEE:
+                    return value.type == CalleeSaved;
+                    break;
+                case CALLER:
+                    return value.type == CallerSaved;
+                    break;
+                case STK:
+                    return value.type == None;
+                    break;
+            }
+        }
 
         VarPos pos;
         AsmOpValue value;
@@ -199,7 +205,7 @@ public:
 
     }
 
-    vector<AsmCode> formal(const string name, int num) {
+    void formal(const string name, int num) {
         assert(name != "" && exist(name) == false);
         if (num >= arg_reg_num) {
             CheckStatus(PARAMS_NUM_OVERFLOW);
@@ -208,87 +214,77 @@ public:
         caller_vars[num] = name;
         vars[name] = varInfo{CALLER, {CallerSaved, num},
                              true, clock, ++pageVarNum};
-        return {};
+        return;
     }
 
-    vector<AsmCode> saveCaller() {
-        vector<AsmCode> codes;
+    void saveCaller() {
         for (auto &s: caller_vars) {
             if (s != "") {
-                append(codes, vars[s].persist(this));
+                vars[s].persist(this);
                 s = "";
             }
         }
-        return codes;
     }
 
-    vector<AsmCode> ret(SYM *sym) {
-        vector<AsmCode> codes;
+    void ret(SYM *sym) {
         AsmOpValue op;
         if (sym->IsConst()) {
             op = {sym->GetValue()};
         } else {
 
             assert(exist(sym->ToStr()));
-            auto r = getReg(sym->ToStr(), false);
-            append(codes, r.first);
-            op = r.second;
+            op = getReg(sym->ToStr(), false);
         }
 
 
-        append(codes, {ASM_MOV, {CallerSaved, 0}, op});
+        append({ASM_MOV, {CallerSaved, 0}, op});
         for (auto &s: callee_vars) {
+            assert(exist(s));
             if (s != "") {
-                append(codes, vars[s].releaseCallee());
+                vars[s].releaseCallee();
                 //s = "";
             }
         }
 
-        return codes;
     }
 
-    vector<AsmCode> loadArgs(const vector<SYM *> args) {
-        vector<AsmCode> codes;
+    void loadArgs(const vector<SYM *> args) {
         int cnt = 0;
         for (auto &x: args) {
             if (x->IsConst()) {
-                AsmCode c{ASM_MOV, {CallerSaved, cnt++}, x->GetValue()};
-                append(codes, c);
+                append({ASM_MOV, {CallerSaved, cnt++}, x->GetValue()});
             } else {
 
                 auto name = x->ToStr();
                 assert(exist(name));
-                if (vars[name].persistInStk()) {
-                    append(codes, {ASM_LOAD, {CallerSaved, cnt++}, {FP}, {vars[name].getStkOffset()}});
+                if (vars[name].inStk()) {
+                    append({ASM_LOAD, {CallerSaved, cnt++}, {FP}, {vars[name].getStkOffset()}});
                 } else {
                     auto r = vars[name].getReg(clock, false);
 
-                    append(codes, {ASM_MOV, {CallerSaved, cnt++}, r});
+                    append({ASM_MOV, {CallerSaved, cnt++}, r});
                 }
             }
         }
-        return codes;
     }
 
-    vector<AsmCode> declare(const string &name) {
+    void declare(const string &name) {
         assert(name != "" && exist(name) == false);
         vars[name] = varInfo{ORIGIN, {Zero},
                              false, clock, ++pageVarNum};
-        return {};
     }
 
-    pair<vector<AsmCode>, AsmOpValue> GetOpValue(SYM *sym) {
+    AsmOpValue GetOpValue(SYM *sym) {
         if (sym == nullptr)return {};
         if (sym->IsConst()) {
-            return {{},
-                    {sym->GetValue()}};
+            return {sym->GetValue()};
         } else {
             assert(exist(sym->ToStr()));
             return getReg(sym->ToStr(), false);
         }
     }
 
-    pair<vector<AsmCode>, AsmOpValue> GetAssignValue(SYM *sym) {
+    AsmOpValue GetAssignValue(SYM *sym) {
         assert(!sym->IsConst());
 
         auto name = sym->ToStr();
@@ -306,28 +302,27 @@ public:
 private:
 
 
-    pair<vector<AsmCode>, AsmOpValue> getReg(const string &name, bool isAssign) {
+    AsmOpValue getReg(const string &name, bool isAssign) {
         assert(exist(name));
         auto &info = vars[name];
-        if ((info.isOrigin() && isAssign) || info.persistInStk()) {
-            auto ans = emptyReg(name, info.persistInStk());
-            append(ans.first, info.toReg(ans.second, this));
-            ans.second = info.getReg(clock, isAssign);
-            return ans;
+        if ((info.isOrigin() && isAssign) || info.inStk()) {
+            auto ans = emptyReg(name);
+            info.toReg(ans, this);
+            return info.getReg(clock, isAssign);
         } else {
-            return {{}, info.getReg(clock, isAssign)};
+            return info.getReg(clock, isAssign);
         }
     }
 
-    pair<vector<AsmCode>, AsmOpValue> emptyReg(const string &name, bool isFromStk) {
+    AsmOpValue emptyReg(const string &name) {
         bool isTemp = 0 == name.compare(0, TEMP_VALUE_PREFIX.length(), TEMP_VALUE_PREFIX);
 
-        if (!isTemp && !isFromStk) {
+        if (!isTemp) {
             for (int i = 0; i < callee_vars.size(); i++) {
                 if (callee_vars[i].empty()) {
                     callee_vars[i] = name;
-                    return {{},
-                            {CalleeSaved, i}};
+                    return
+                            {CalleeSaved, i};
                 }
 
             }
@@ -335,22 +330,28 @@ private:
         for (int i = 1; i < caller_vars.size(); i++) {
             if (caller_vars[i].empty()) {
                 caller_vars[i] = name;
-                return {{},
-                        {CallerSaved, i}};
+                return
+                        {CallerSaved, i};
             }
         }
 
         vector<int> id(caller_vars.size() - 1);
         for (int i = 1; i < id.size(); i++) {
-            assert(vars[caller_vars[i]].persistInStk() == false);
+            assert(vars[caller_vars[i]].inStk() == false && vars[caller_vars[i]].isOrigin() == false);
             id[i] = i;
         }
         std::sort(id.begin(), id.end(), [&](int x, int y) {
-            return vars[caller_vars[x]].getTs() < vars[caller_vars[x]].getTs();
+            auto &vx = vars[caller_vars[x]];
+            auto &vy = vars[caller_vars[y]];
+            if (vx.needWrite() != vy.needWrite()) {
+                return vx.needWrite() < vy.needWrite();
+            }
+            return vx.getTs() < vy.getTs();
         });
         auto &tp = vars[caller_vars[id[0]]];
         caller_vars[id[0]] = name;
-        return {tp.persist(this), {CallerSaved, id[0]}};
+        tp.persist(this);
+        return {CallerSaved, id[0]};
     }
 
 
@@ -373,7 +374,7 @@ RegManager regManager;
 
 int pageVarSum = 0;
 
-vector<AsmCode> begin_func(const TAC *tac) {
+void begin_func(const TAC *tac) {
     regManager = RegManager();
     pageVarSum = 0;
     for (auto t = tac; t->op != TAC_ENDFUNC; t = t->next) {
@@ -381,30 +382,28 @@ vector<AsmCode> begin_func(const TAC *tac) {
             pageVarSum++;
         }
     }
-    vector<AsmCode> ans = {{ASM_PUSH, {RA}},
-                           {ASM_PUSH, {FP}},
-                           {ASM_MOV,  {FP}, {SP}},
-                           {ASM_SUB,  {SP}, {SP}, {-pageVarSum * INSTRUCTION_WIDTH}}
-    };
+    append({{ASM_PUSH, {RA}},
+            {ASM_PUSH, {FP}},
+            {ASM_MOV,  {FP}, {SP}},
+            {ASM_SUB,  {SP}, {SP}, {-pageVarSum * INSTRUCTION_WIDTH}}
+           });
 
     int cnt = 0;
     for (const TAC *now = tac->next; now->op == TAC_FORMAL; now = now->next, cnt++) {
-        append(ans, regManager.formal(now->b->ToStr(), cnt));
+        regManager.formal(now->b->ToStr(), cnt);
     }
-    return ans;
 }
 
-vector<AsmCode> end_func(const TAC *tac) {
-    return {};
+void end_func(const TAC *tac) {
 }
 
-vector<AsmCode> declare_op(const TAC *tac) {
+void declare_op(const TAC *tac) {
 
     return regManager.declare(tac->b->ToStr());
 }
 
-vector<AsmCode> func_call(const TAC *tac) {
-    auto ans = regManager.saveCaller();
+void func_call(const TAC *tac) {
+    regManager.saveCaller();
 
     vector<SYM *> actuals;
     for (auto x = tac->prev; x->op == TAC_ACTUAL; x = x->prev) {
@@ -412,72 +411,60 @@ vector<AsmCode> func_call(const TAC *tac) {
     }
     std::reverse(actuals.begin(), actuals.end());
     assert(actuals.size());
-    append(ans, regManager.loadArgs(actuals));
-    ans.push_back({ASM_JR, {MEM_FUNC_PREFIX + "_" + tac->b->ToStr() + tac->c->ToStr()}});
+    regManager.loadArgs(actuals);
+    append({ASM_JR, {MEM_FUNC_PREFIX + "_" + tac->b->ToStr() + tac->c->ToStr()}});
     auto r = regManager.GetOpValue(tac->a);
 
-    append(ans, r.first);
-    append(ans, {ASM_MOV, r.second, {CallerSaved, 0}});
-    return ans;
+    append({ASM_MOV, r, {CallerSaved, 0}});
+
 }
 
 
-vector<AsmCode> func_ret(const TAC *tac) {
-    auto codes = regManager.ret(tac->a);
-    append(codes, {ASM_ADD, {SP}, {SP}, {pageVarSum * INSTRUCTION_WIDTH}});
-    pageVarSum = 0;
-    append(codes, {ASM_POPR, {FP}});
-    append(codes, {ASM_POPR, {RA}});
+void func_ret(const TAC *tac) {
+    regManager.ret(tac->a);
+    append({ASM_ADD, {SP}, {SP}, {pageVarSum * INSTRUCTION_WIDTH}});
+    append({ASM_POPR, {FP}});
+    append({ASM_POPR, {RA}});
 
-    codes.push_back({ASM_RET});
-    return codes;
+    append(AsmCode(ASM_RET));
 }
 
-vector<AsmCode> func_locate(const TAC *tac) {
-    auto ans = regManager.saveCaller();
-    append(ans, regManager.loadArgs({tac->b, tac->a}));
-    append(ans, {ASM_JR, LOCATE_FUNC});
+void func_locate(const TAC *tac) {
+    regManager.saveCaller();
+    regManager.loadArgs({tac->b, tac->a});
+    append({ASM_JR, LOCATE_FUNC});
 
     auto r = regManager.GetAssignValue(tac->a);
 
-    append(ans, r.first);
-    append(ans, {ASM_MOV, r.second, {CallerSaved, 0}});
-    return ans;
+    append({ASM_MOV, r, {CallerSaved, 0}});
 }
 
-vector<AsmCode> func_bind(const TAC *tac) {
-    auto ans = regManager.saveCaller();
-    append(ans, regManager.loadArgs({tac->a, tac->b, tac->c}));
-    append(ans, {ASM_JR, BIND_FUNC});
-
-    //auto r = regManager.GetOpValue(tac->a);
-
-    //append(ans, r.first);
-    //append(ans, {ASM_MOV, r.second, {CallerSaved, 0}});
-    return ans;
+void func_bind(const TAC *tac) {
+    regManager.saveCaller();
+    regManager.loadArgs({tac->a, tac->b, tac->c});
+    append({ASM_JR, BIND_FUNC});
 }
 
-vector<AsmCode> func_new(const TAC *tac) {
-    auto ans = declare_op(tac);
-    append(ans, regManager.saveCaller());
-    append(ans, regManager.loadArgs({tac->a, tac->b}));
-    append(ans, {ASM_JR, NEW_FUNC});
+void func_new(const TAC *tac) {
+    declare_op(tac);
+    regManager.saveCaller();
+    regManager.loadArgs({tac->a, tac->b});
+    append({ASM_JR, NEW_FUNC});
 
     auto r = regManager.GetAssignValue(tac->b);
 
-    append(ans, r.first);
-    append(ans, {ASM_MOV, r.second, {CallerSaved, 0}});
-    return ans;
+    append({ASM_MOV, r, {CallerSaved, 0}});
 }
 
 vector<AsmCode> object_generate(const TAC *tac) {
     regManager.addClock();
+    _asm_codes.clear();
     switch (tac->op) {
         case TAC_BEGINFUNC:
-            return begin_func(tac);
+            begin_func(tac);
             break;
         case TAC_DECLARE:
-            return declare_op(tac);
+            declare_op(tac);
             break;
         case TAC_ADD:
         case TAC_SUB:
@@ -492,15 +479,11 @@ vector<AsmCode> object_generate(const TAC *tac) {
         case TAC_COPY:
         case TAC_GE : {
 
-            vector<AsmCode> codes;
             auto a = regManager.GetAssignValue(tac->a);
             auto b = regManager.GetOpValue(tac->b);
             auto c = regManager.GetOpValue(tac->c);
-            append(codes, a.first);
-            append(codes, b.first);
-            append(codes, c.first);
-            append(codes, generate_op(tac->op, a.second, b.second, c.second));
-            return codes;
+            append(generate_op(tac->op, a, b, c));
+
         }
             break;
 
@@ -510,37 +493,33 @@ vector<AsmCode> object_generate(const TAC *tac) {
         case TAC_IFZ: {
 
             auto r = regManager.GetOpValue(tac->b);
-            r.first.push_back({ASM_BNZ, r.second, {tac->a->ToStr()}});
-            return r.first;
+            append({ASM_BNZ, r, {tac->a->ToStr()}});
             break;
         }
         case TAC_ENDFUNC:
-            return end_func(tac);
+            end_func(tac);
             break;
         case TAC_LABEL:
-            return {{ASM_LABEL, {tac->a->ToStr()}}};
+            append({{ASM_LABEL, {tac->a->ToStr()}}});
             break;
         case TAC_CALL:
-            return func_call(tac);
+            func_call(tac);
             break;
         case TAC_RETURN:
-            return func_ret(tac);
+            func_ret(tac);
             break;
         case TAC_LOCATE:
-            return func_locate(tac);
+            func_locate(tac);
             break;
         case TAC_BEGINBLOCK:
-            return {};
             break;
         case TAC_ENDBLOCK:
-
-            return {};
             break;
         case TAC_NEW:
-            return func_new(tac);
+            func_new(tac);
             break;
         case TAC_BIND:
-            return func_bind(tac);
+            func_bind(tac);
             break;
         case TAC_UNDEF:
             break;
@@ -556,7 +535,7 @@ vector<AsmCode> object_generate(const TAC *tac) {
             assert(false);
             break;
     }
-    return {};
+    return _asm_codes;
 }
 
 void tac_object_generate(TAC *tac) {

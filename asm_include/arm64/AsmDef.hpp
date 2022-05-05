@@ -20,7 +20,7 @@ using std::vector;
  DEF(ASM_LABEL, STRING,NONE,NONE,"[0]:") \
  DEF(ASM_LOAD,REG,REG,IMM,"LDRQ [0],[[1],[2]]")     \
  DEF(ASM_STORE,REG,REG,IMM,"STRQ [0],[[1],[2]]")    \
- DEF(ASM_PUSH,REG_OR_IMM,NONE,NONE,"STR {[0]} [sp,-8]")     \
+ DEF(ASM_PUSH,REG_OR_IMM,NONE,NONE,"STR {[0]} [sp,-8]!")     \
  DEF(ASM_POP,NONE,NONE,NONE,"ADD sp,sp,8")       \
  DEF(ASM_POPR,REG,NONE,NONE,"POP {[0]}")  \
  DEF(ASM_BNZ,REG_OR_IMM,STRING,NONE,"CMP [0] 0x0\nBNE [1]")         \
@@ -38,8 +38,8 @@ using std::vector;
  DEF(ASM_GE,REG,REG,REG_OR_IMM,"GE [0] [1] [2]")    \
  DEF(ASM_NEG,REG,REG_OR_IMM,NONE,"NEG [0] [1]")    \
  DEF(ASM_CLEAR,NONE,NONE,NONE,"CLEAR") \
- DEF(ASM_LOCATE,REG,REG,IMM,"LOCATE [0] [1] -> [2]")
-
+ DEF(ASM_LOCATE,REG,REG,IMM,"LOCATE [0] [1] -> [2]")\
+DEF(ASM_SWAPRM,REG,REG,IMM,"SWAP [0],[0],[[1],[2]]")
 inline string Get_FP_REG_NAME() {
     return "x29";
 }
