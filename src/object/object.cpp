@@ -57,7 +57,8 @@ void begin_func(const TAC *tac) {
             pageVarSum++;
         }
     }
-    append({{ASM_RESTORE, {-(pageVarSum + 2) * INSTRUCTION_WIDTH}}
+    if (pageVarSum & 1)pageVarSum++;
+    append({{ASM_SAVE, {-(pageVarSum + 2) * INSTRUCTION_WIDTH}}
            });
 
     int cnt = 0;

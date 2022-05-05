@@ -80,7 +80,7 @@ int cur_obj_num = 0;
 obj *getObj(int oid) {
     if(!oid){
         exit(REF_TO_NULL_R);
-    }else if(obj_pool.find(oid)!=obj_pool.end()){
+    }else if(obj_pool.find(oid)==obj_pool.end()){
         exit(REF_TO_WASTE_R);
     }
     return &obj_pool[oid];

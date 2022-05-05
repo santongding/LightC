@@ -20,7 +20,7 @@ using std::vector;
  DEF(ASM_LABEL, STRING,NONE,NONE,"[0]:") \
  DEF(ASM_LOAD,REG,REG,IMM,"LDR [0],[[1],[2]]")     \
  DEF(ASM_STORE,REG,REG,IMM,"STR [0],[[1],[2]]")    \
- DEF(ASM_SAVE,IMM,NONE,NONE,"STP x29,x30,[sp,#[0]]!")     \
+ DEF(ASM_SAVE,IMM,NONE,NONE,"STP x29,x30,[sp,#[0]]!\nMOV x29, sp")     \
  DEF(ASM_RESTORE,IMM,NONE,NONE,"LDP x29,x30,[sp],#[0]")       \
  DEF(ASM_BNZ,REG,STRING,NONE,"CMP xzr, [0]\nBNE [1]")         \
  DEF(ASM_RET,NONE,NONE,NONE,"RET")     \
