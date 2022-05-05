@@ -153,6 +153,7 @@ private:
                 return value.type == None;
                 break;
         }
+        return true;
     }
 
     VarPos pos;

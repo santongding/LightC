@@ -10,6 +10,7 @@ class a{
             this.y=this.y+i.x(j);
             z:int;
             z=this.x+this.y;
+            this.x=z;
             return this;
         }
         return this;
@@ -18,4 +19,12 @@ class a{
 
 class b{
     int x(i:int){return 233;}
+}
+
+class main{
+    int main(){
+        bb:new b;
+        aa:new a;
+        return aa.f(bb,312).x;
+    }
 }

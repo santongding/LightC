@@ -570,9 +570,9 @@ static const yytype_int16 yyrline[] =
        0,    52,    52,    57,    57,    61,    64,    68,    68,    72,
       72,    74,    77,    82,    85,    86,    89,    93,    96,    99,
      100,   106,   107,   108,   109,   110,   112,   122,   125,   129,
-     132,   137,   139,   145,   151,   155,   167,   173,   182,   185,
-     188,   194,   197,   200,   203,   207,   211,   215,   219,   223,
-     227,   231,   235,   239,   243,   247,   251,   255,   259,   263
+     132,   137,   139,   145,   151,   155,   167,   174,   183,   186,
+     189,   195,   198,   201,   204,   208,   212,   216,   220,   224,
+     228,   232,   236,   240,   244,   248,   252,   256,   260,   264
 };
 #endif
 
@@ -1418,203 +1418,204 @@ yyreduce:
   case 36: /* return_statement: RETURN expression ';'  */
 #line 167 "LightC.y"
                      {
-		TAC *t=mk_tac(TAC_RETURN, (yyvsp[-1].exp)->ret, NULL, NULL,true);
-        	t->prev=(yyvsp[-1].exp)->tac;
+		auto exp = flush_exp((yyvsp[-1].exp));
+		TAC *t=mk_tac(TAC_RETURN, exp->ret, NULL, NULL,true);
+        	t->prev=exp->tac;
         	(yyval.tac)=t;
 }
-#line 1426 "bison.cpp"
+#line 1427 "bison.cpp"
     break;
 
   case 37: /* expression_statement: expression_list ';'  */
-#line 174 "LightC.y"
+#line 175 "LightC.y"
 {
 	auto tp =do_exp_list((yyvsp[-1].exp),false);
 	if(tp)
 	(yyval.tac) = tp->tac;
 	else (yyval.tac) = NULL;
 }
-#line 1437 "bison.cpp"
+#line 1438 "bison.cpp"
     break;
 
   case 38: /* expression_list: %empty  */
-#line 182 "LightC.y"
+#line 183 "LightC.y"
                   {
 	(yyval.exp)=NULL;
 }
-#line 1445 "bison.cpp"
+#line 1446 "bison.cpp"
     break;
 
   case 39: /* expression_list: expression  */
-#line 185 "LightC.y"
+#line 186 "LightC.y"
             {
 	(yyval.exp)=(yyvsp[0].exp);
 }
-#line 1453 "bison.cpp"
+#line 1454 "bison.cpp"
     break;
 
   case 40: /* expression_list: expression_list ',' expression  */
-#line 189 "LightC.y"
+#line 190 "LightC.y"
 {
 	(yyval.exp)=join_exp((yyvsp[-2].exp),(yyvsp[0].exp));
 }
-#line 1461 "bison.cpp"
+#line 1462 "bison.cpp"
     break;
 
   case 41: /* expression: identifier '=' expression  */
-#line 194 "LightC.y"
+#line 195 "LightC.y"
                                        {
 	(yyval.exp)=do_assign(mk_exp(NULL,(yyvsp[-2].sym),NULL),flush_exp((yyvsp[0].exp)));
 }
-#line 1469 "bison.cpp"
+#line 1470 "bison.cpp"
     break;
 
   case 42: /* expression: expression '.' identifier '=' expression  */
-#line 197 "LightC.y"
+#line 198 "LightC.y"
                                           {
  	(yyval.exp)=do_assign(do_locate(flush_exp((yyvsp[-4].exp)),(yyvsp[-2].sym)),flush_exp((yyvsp[0].exp)));
  }
-#line 1477 "bison.cpp"
+#line 1478 "bison.cpp"
     break;
 
   case 43: /* expression: expression '.' identifier  */
-#line 200 "LightC.y"
+#line 201 "LightC.y"
                            {
 	(yyval.exp)=do_locate(flush_exp((yyvsp[-2].exp)),(yyvsp[0].sym));
 }
-#line 1485 "bison.cpp"
+#line 1486 "bison.cpp"
     break;
 
   case 44: /* expression: expression '+' expression  */
-#line 204 "LightC.y"
+#line 205 "LightC.y"
 {
 	(yyval.exp)=do_bin(TAC_ADD, flush_exp((yyvsp[-2].exp)), flush_exp((yyvsp[0].exp)));
 }
-#line 1493 "bison.cpp"
+#line 1494 "bison.cpp"
     break;
 
   case 45: /* expression: expression '-' expression  */
-#line 208 "LightC.y"
+#line 209 "LightC.y"
 {
 	(yyval.exp)=do_bin(TAC_SUB, flush_exp((yyvsp[-2].exp)), flush_exp((yyvsp[0].exp)));
 }
-#line 1501 "bison.cpp"
+#line 1502 "bison.cpp"
     break;
 
   case 46: /* expression: expression '*' expression  */
-#line 212 "LightC.y"
+#line 213 "LightC.y"
 {
 	(yyval.exp)=do_bin(TAC_MUL, flush_exp((yyvsp[-2].exp)), flush_exp((yyvsp[0].exp)));
 }
-#line 1509 "bison.cpp"
+#line 1510 "bison.cpp"
     break;
 
   case 47: /* expression: expression '/' expression  */
-#line 216 "LightC.y"
+#line 217 "LightC.y"
 {
 	(yyval.exp)=do_bin(TAC_DIV, flush_exp((yyvsp[-2].exp)), flush_exp((yyvsp[0].exp)));
 }
-#line 1517 "bison.cpp"
+#line 1518 "bison.cpp"
     break;
 
   case 48: /* expression: '-' expression  */
-#line 220 "LightC.y"
+#line 221 "LightC.y"
 {
 	(yyval.exp)=do_un(TAC_NEG, flush_exp((yyvsp[0].exp)));
 }
-#line 1525 "bison.cpp"
+#line 1526 "bison.cpp"
     break;
 
   case 49: /* expression: expression EQ expression  */
-#line 224 "LightC.y"
+#line 225 "LightC.y"
 {
 	(yyval.exp)=do_cmp(TAC_EQ, flush_exp((yyvsp[-2].exp)), flush_exp((yyvsp[0].exp)));
 }
-#line 1533 "bison.cpp"
+#line 1534 "bison.cpp"
     break;
 
   case 50: /* expression: expression NE expression  */
-#line 228 "LightC.y"
+#line 229 "LightC.y"
 {
 	(yyval.exp)=do_cmp(TAC_NE, flush_exp((yyvsp[-2].exp)), flush_exp((yyvsp[0].exp)));
 }
-#line 1541 "bison.cpp"
+#line 1542 "bison.cpp"
     break;
 
   case 51: /* expression: expression LT expression  */
-#line 232 "LightC.y"
+#line 233 "LightC.y"
 {
 	(yyval.exp)=do_cmp(TAC_LT, flush_exp((yyvsp[-2].exp)), ((yyvsp[0].exp)));
 }
-#line 1549 "bison.cpp"
+#line 1550 "bison.cpp"
     break;
 
   case 52: /* expression: expression LE expression  */
-#line 236 "LightC.y"
+#line 237 "LightC.y"
 {
 	(yyval.exp)=do_cmp(TAC_LE, flush_exp((yyvsp[-2].exp)), flush_exp((yyvsp[0].exp)));
 }
-#line 1557 "bison.cpp"
+#line 1558 "bison.cpp"
     break;
 
   case 53: /* expression: expression GT expression  */
-#line 240 "LightC.y"
+#line 241 "LightC.y"
 {
 	(yyval.exp)=do_cmp(TAC_GT, flush_exp((yyvsp[-2].exp)), flush_exp((yyvsp[0].exp)));
 }
-#line 1565 "bison.cpp"
+#line 1566 "bison.cpp"
     break;
 
   case 54: /* expression: expression GE expression  */
-#line 244 "LightC.y"
+#line 245 "LightC.y"
 {
 	(yyval.exp)=do_cmp(TAC_GE, flush_exp((yyvsp[-2].exp)), flush_exp((yyvsp[0].exp)));
 }
-#line 1573 "bison.cpp"
+#line 1574 "bison.cpp"
     break;
 
   case 55: /* expression: '(' expression_list ')'  */
-#line 248 "LightC.y"
+#line 249 "LightC.y"
 {
 	(yyval.exp)=do_exp_list((yyvsp[-1].exp),false);
 }
-#line 1581 "bison.cpp"
+#line 1582 "bison.cpp"
     break;
 
   case 56: /* expression: INTEGER  */
-#line 252 "LightC.y"
+#line 253 "LightC.y"
 {
 	(yyval.exp)=mk_exp(NULL, mk_const(atoi((yyvsp[0].string))), NULL);
 }
-#line 1589 "bison.cpp"
+#line 1590 "bison.cpp"
     break;
 
   case 57: /* expression: identifier  */
-#line 256 "LightC.y"
+#line 257 "LightC.y"
 {
 	(yyval.exp)=mk_exp(NULL,(yyvsp[0].sym),NULL);
 }
-#line 1597 "bison.cpp"
+#line 1598 "bison.cpp"
     break;
 
   case 58: /* expression: expression '.' identifier '(' expression_list ')'  */
-#line 260 "LightC.y"
+#line 261 "LightC.y"
 {
 	(yyval.exp)=do_call_ret(flush_exp((yyvsp[-5].exp)),(yyvsp[-3].sym),(yyvsp[-1].exp));
 }
-#line 1605 "bison.cpp"
+#line 1606 "bison.cpp"
     break;
 
   case 59: /* expression: error  */
-#line 264 "LightC.y"
+#line 265 "LightC.y"
 {
 	CheckStatus(BAD_SYNTAX);
 	(yyval.exp)=mk_exp(NULL, NULL, NULL);
 }
-#line 1614 "bison.cpp"
+#line 1615 "bison.cpp"
     break;
 
 
-#line 1618 "bison.cpp"
+#line 1619 "bison.cpp"
 
       default: break;
     }
@@ -1807,7 +1808,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 271 "LightC.y"
+#line 272 "LightC.y"
 
 
 void yyerror(char* msg)

@@ -5,6 +5,7 @@
 #include "TypeManager.h"
 #include "Checker.h"
 #include "string"
+#include "linker.hpp"
 
 TypeManager typeManager;
 
@@ -47,11 +48,11 @@ void CheckTac(const TAC *tac) {
             if (now->op == TAC_BEGINFUNC) {
                 assert(scope == 1);
                 scope = 2;
-                CheckStatus(typeManager.DeclareFunc(lstClass, now->b->ToStr(), now));
+                typeManager.DeclareFunc(lstClass, now->b->ToStr(), now);
             }
             if (now->op == TAC_DECLARE) {
                 if (scope == 1)
-                    CheckStatus(typeManager.DeclareMember(lstClass, now->b->ToStr(), now->a->ToStr()));
+                    typeManager.DeclareMember(lstClass, now->b->ToStr(), now->a->ToStr());
             }
             if (now->op == TAC_ENDFUNC) {
                 assert(scope == 2);
@@ -67,6 +68,9 @@ void CheckTac(const TAC *tac) {
         }
     }
     typeManager.Print();
+
+
+    dumpBuiltin(&typeManager, BUILTIN_SOURCE_NAME);
 
     int scope = 0;
     setlineno(1);

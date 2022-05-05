@@ -25,95 +25,13 @@ int IdentifierMap::itn(const string &s) {
 }
 
 void IdentifierMap::Init() {
+    RecordIdentifier(MAIN_CLASS_NAME);
     assert(!inited);
     int cnt = 0;
     for (auto &it: identifierMap) {
         id2num[it] = ++cnt;
     }
     inited = true;
-}
-
-
-TypeInfo::TypeInfo(VALUE_TYPE t, int n) {
-    type_name = n;
-    type = t;
-    assert(type_name > 0);
-    assert(t == LINK_V || t == REF_V);
-}
-
-TypeInfo::TypeInfo(VALUE_TYPE t) {
-    type_name = 0;
-    type = t;
-    assert(t == INT_V || t == ANY_V || t == INVALID_V);
-}
-
-
-string TypeInfo::Format(IdentifierMap *idMap) {
-    std::stringstream stringstream;
-    assert(type != ANY_V);
-    if (type == INT_V) {
-        return "[int]";
-    } else {
-        stringstream << "[";
-        if (type == LINK_V) {
-            stringstream << "link ";
-        }
-        stringstream << idMap->nti(type_name) << "<" << type_name << ">]";
-    }
-    return stringstream.str();
-}
-
-string FuncInfo::Format(IdentifierMap *idMap) {
-    std::stringstream stringstream;
-    stringstream << "(";
-    for (int i = 0; i < argsType.size(); i++) {
-        stringstream << idMap->nti(argsType[i].second) << "<"
-                     << argsType[i].second << ">: " << argsType[i].first.Format(idMap);
-        if (i != argsType.size() - 1)
-            stringstream << ", ";
-    }
-    stringstream << ") -> " << retType.Format(idMap);
-
-    return stringstream.str();
-}
-
-
-ClassInfo::ClassInfo(const int name) {
-    className = name;
-}
-
-STATUS ClassInfo::DeclareMember(const int name, const TypeInfo &type) {
-    if (membersType.find(name) == membersType.end() && funcs.find(name) == funcs.end()) {
-        membersType[name] = type;
-        return OK;
-    } else {
-        return SYMBOL_REPEAT;
-    }
-}
-
-
-STATUS ClassInfo::DeclareFunc(const int name, TypeInfo ret, vector<pair<TypeInfo, int>> ts) {
-    assert(ts.size() >= 1);
-    order.push_back(name);
-    if (membersType.find(name) == membersType.end() && funcs.find(name) == funcs.end()) {
-        funcs[name] = FuncInfo(ret, vector<pair<TypeInfo, int>>(ts.begin(), ts.end()));
-        return OK;
-    } else {
-        return SYMBOL_REPEAT;
-    }
-}
-
-string ClassInfo::Format(IdentifierMap *idMap) {
-    std::stringstream stringstream;
-    stringstream << idMap->nti(className) << "<" << className << ">:\n";
-    for (auto &x: membersType) {
-        stringstream << "\t" << idMap->nti(x.first) << "<" << x.first << ">: " << x.second.Format(idMap) << "\n";
-    }
-    for (auto &x: funcs) {
-
-        stringstream << "\t" << idMap->nti(x.first) << "<" << x.first << ">: " << x.second.Format(idMap) << "\n";
-    }
-    return stringstream.str();
 }
 
 
@@ -168,20 +86,18 @@ STATUS TypeManager::DeclareClass(const string &name) {
     }
 }
 
-STATUS TypeManager::DeclareMember(const string &name, const string &mem, const string &type) {
+void TypeManager::DeclareMember(const string &name, const string &mem, const string &type) {
     assert(classes.find(idMap.itn(name)) != classes.end());
 
     TypeInfo t;
-    auto sts = TryDecodeType(type, t);
-    if (sts != OK) {
-        return sts;
-    }
-    return classes[idMap.itn(name)]->DeclareMember(idMap.itn(mem), t);
+    CheckStatus(TryDecodeType(type, t));
+
+    classes[idMap.itn(name)]->DeclareMember(idMap.itn(mem), t);
 
 }
 
 
-STATUS TypeManager::DeclareFunc(const string &name, const string &funcname, const TAC *func) {
+void TypeManager::DeclareFunc(const string &name, const string &funcname, const TAC *func) {
     assert(classes.find(idMap.itn(name)) != classes.end());
 
     TypeInfo t;
@@ -204,7 +120,7 @@ STATUS TypeManager::DeclareFunc(const string &name, const string &funcname, cons
         CheckStatus(TryDecodeType(form->a->ToStr(), t));
         ts.push_back({t, idMap.itn(form->b->ToStr())});
     }
-    return classes[idMap.itn(name)]->DeclareFunc(idMap.itn(funcname), ret, ts);
+    classes[idMap.itn(name)]->DeclareFunc(idMap.itn(funcname), ret, ts);
 }
 
 void TypeManager::Print() {
@@ -228,6 +144,9 @@ TypeManager::CheckTac(SYM *caller, SYM *callee, TAC *tac, std::function<SYM *(SY
     auto cls = classes[type];
     if (tac->op == TAC_LOCATE || tac->op == TAC_BIND) {
         auto tp = cls->GetMemType(idMap.itn(tac->c->ToStr()));
+        if (tp.Is<INVALID_V>()) {
+            CheckStatus(CLASS_MEMBER_NOT_EXIST);
+        }
         CastType(caller, tp);
     } else if (tac->op == TAC_CALL) {
         auto tp = cls->GetFunc(idMap.itn(tac->c->ToStr()));
@@ -270,6 +189,19 @@ void TypeManager::CastType(SYM *from, SYM *to, bool isInt) {
 void TypeManager::CastType(SYM *from, const TypeInfo &t) {
     TypeInfo from_t;
     CheckStatus(TryDecodeType(from->ToStr(), from_t));
-    CheckStatus(from_t.Cast(t));
+    from_t.Cast(t);
     from->SetStr(from_t.ToStr(&idMap));
+}
+
+string TypeManager::Dump() {
+    std::stringstream stringstream("std::map<int, ClassInfo> classes = {");
+    for (auto &c: classes) {
+        stringstream << "{" << c.first << "," << c.second->Dump() << "},";
+    }
+    stringstream << "};\n";
+    if(classes.find( idMap.itn(MAIN_CLASS_NAME))==classes.end()){
+        CheckStatus(MAIN_CLASS_NOT_DEFINE);
+    }
+    stringstream << "vtype main_obj_tid = " << idMap.itn(MAIN_CLASS_NAME) << ";\n";
+    return stringstream.str();
 }

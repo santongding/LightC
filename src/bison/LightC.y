@@ -165,8 +165,9 @@ return_statement:
 }
 |*/
 RETURN expression ';'{
-		TAC *t=mk_tac(TAC_RETURN, $2->ret, NULL, NULL,true);
-        	t->prev=$2->tac;
+		auto exp = flush_exp($2);
+		TAC *t=mk_tac(TAC_RETURN, exp->ret, NULL, NULL,true);
+        	t->prev=exp->tac;
         	$$=t;
 }
 

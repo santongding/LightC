@@ -4,6 +4,8 @@
 
 #ifndef LIGHTC_DEF_H
 #define LIGHTC_DEF_H
+#include "stdint.h"
+#include "string"
 
 typedef int64_t vtype;
 const std::string TEMP_VALUE_PREFIX = "#t";
@@ -17,6 +19,9 @@ const std::string BEFORE_CALL_FUNC = "__LIGHTC_BEFORE_CALL";
 const std::string RET_FUNC = "__LIGHTC_RET";
 
 const std::string ASM_SOURCE_NAME = ".LIGHTC_ASM.s";
+const std::string BUILTIN_SOURCE_NAME = ".LIGHTC_BUILTIN.cpp";
+
+const std::string MAIN_CLASS_NAME ="main";
 
 enum VALUE_TYPE {
     INVALID_V = 0,

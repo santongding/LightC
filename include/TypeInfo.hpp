@@ -4,17 +4,18 @@
 
 #ifndef LIGHTC_TYPEINFO_HPP
 #define LIGHTC_TYPEINFO_HPP
+
 #include "def.h"
 #include "string"
 #include "set"
 #include "unordered_map"
 #include "vector"
 #include "cassert"
-#include "utils.hpp"
 
 using std::pair;
 using std::string;
 using std::vector;
+
 class IdentifierMap {
 private:
     std::unordered_map<string, int> id2num;
@@ -37,55 +38,31 @@ class TypeInfo {
 public:
     TypeInfo() = default;
 
-    TypeInfo(VALUE_TYPE t, int n);
+    TypeInfo(VALUE_TYPE t, int n) : type_name(n), type(t) {
 
-    TypeInfo(VALUE_TYPE t);
+        assert(type_name > 0);
+        assert(t == LINK_V || t == REF_V);
+    }
+
+    TypeInfo(VALUE_TYPE t) : type_name(0), type(t) {
+        assert(t == INT_V || t == ANY_V || t == INVALID_V);
+    }
+
+    string Dump() const;
 
     template<VALUE_TYPE T>
     bool Is() const {
         return type == T;
     }
 
-    int GetTypeName() const {
-        assert(type_name);
-        assert(Is<LINK_V>() || Is<REF_V>());
-        return type_name;
-    }
+    int GetTypeName() const;
 
-
-    STATUS Cast(const TypeInfo &t) {
-        if (t.Is<ANY_V>()) {
-            return TYPE_UNKNOWN;
-        }
-        if (Is<ANY_V>()) {
-            assert(!type_name);
-            type = t.type;
-            type_name = t.type_name;
-        } else {
-            if (type != t.type || type_name != t.type_name) {
-                return TYPE_CONFLICT;
-            }
-        }
-        return OK;
-    }
+    void Cast(const TypeInfo &t);
 
 
     string Format(IdentifierMap *idMap);
 
-    string ToStr(IdentifierMap *idMap) const {
-        string ans;
-        if (type == INT_V) {
-            ans += "int|";
-        } else if (type == LINK_V) {
-            ans += "link|";
-        } else if (type == REF_V) {
-            ans += "ref|";
-        } else {
-            CheckStatus(TYPE_UNKNOWN);
-        }
-        if (type_name)ans += idMap->nti(type_name), assert(type != INT_V);
-        return ans;
-    }
+    string ToStr(IdentifierMap *idMap) const;
 
 private:
     VALUE_TYPE type;
@@ -118,40 +95,49 @@ class ClassInfo {
 public:
     ClassInfo(const int name);
 
-    STATUS DeclareMember(const int name, const TypeInfo &type);
+    ClassInfo(vector<pair<int, TypeInfo>> types) {
+        for (auto &t: types) {
+            membersType[t.first] = t.second;
+            id2order[t.first] = order2id.size();
+            order2id.push_back(t.first);
+        }
+    }
 
-    STATUS DeclareFunc(const int name, TypeInfo ret, vector<pair<TypeInfo, int>> ts);
+    void DeclareMember(const int name, const TypeInfo &type);
 
+    void DeclareFunc(const int name, TypeInfo ret, vector<pair<TypeInfo, int>> ts);
+
+    string Dump() const;
 
     string Format(IdentifierMap *idMap);
 
+    FuncInfo GetFunc(int id);
+
     TypeInfo GetMemType(int id) {
         if (membersType.find(id) == membersType.end()) {
-            CheckStatus(CLASS_MEMBER_NOT_EXIST);
+            return {};
         } else {
             return membersType[id];
         }
     }
 
-    FuncInfo GetFunc(int id) {
-        if (funcs.find(id) == funcs.end()) {
-            CheckStatus(CLASS_MEMBER_NOT_EXIST);
-        } else {
-            return funcs[id];
-        }
-    }
 
-    int GetMemNum(){
+    int GetMemNum() {
         return membersType.size();
     }
 
-    int order2nid(int order){
+    int order2nid(int order) {
+        return order2id[order];
+    }
 
+    int nid2order(int id) {
+        return id2order[id];
     }
 
 
 private:
-    vector<int>order;
+    std::unordered_map<int, int> id2order;
+    vector<int> order2id;
     std::unordered_map<int, TypeInfo> membersType;
     std::unordered_map<int, FuncInfo> funcs;
     int className;

@@ -32,9 +32,9 @@ public:
 
     STATUS DeclareClass(const string &name);
 
-    STATUS DeclareMember(const string &name, const string &mem, const string &type);
+    void DeclareMember(const string &name, const string &mem, const string &type);
 
-    STATUS DeclareFunc(const string &name, const string &funcname, const TAC *func);
+    void DeclareFunc(const string &name, const string &funcname, const TAC *func);
 
     void CastType(SYM *from, SYM *to, bool isInt);
 
@@ -44,9 +44,11 @@ public:
 
     void Print();
 
-    int Str2ID(const string &s){
+    int Str2ID(const string &s) {
         return idMap.itn(s);
     }
+
+    string Dump();
 
 
 private:
