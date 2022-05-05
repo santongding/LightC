@@ -18,31 +18,26 @@ using std::vector;
  DEF(ASM_JR, STRING,NONE,NONE,"BL [0]") \
  DEF(ASM_JUMP, STRING,NONE,NONE,"B [0]")\
  DEF(ASM_LABEL, STRING,NONE,NONE,"[0]:") \
- DEF(ASM_LOAD,REG,REG,IMM,"LDRQ [0],[[1],[2]]")     \
- DEF(ASM_STORE,REG,REG,IMM,"STRQ [0],[[1],[2]]")    \
- DEF(ASM_PUSH,REG_OR_IMM,NONE,NONE,"STR {[0]} [sp,-8]!")     \
- DEF(ASM_POP,NONE,NONE,NONE,"ADD sp,sp,8")       \
- DEF(ASM_POPR,REG,NONE,NONE,"POP {[0]}")  \
- DEF(ASM_BNZ,REG_OR_IMM,STRING,NONE,"CMP [0] 0x0\nBNE [1]")         \
+ DEF(ASM_LOAD,REG,REG,IMM,"LDR [0],[[1],[2]]")     \
+ DEF(ASM_STORE,REG,REG,IMM,"STR [0],[[1],[2]]")    \
+ DEF(ASM_SAVE,IMM,NONE,NONE,"STP x29,x30,[sp,#[0]]!")     \
+ DEF(ASM_RESTORE,IMM,NONE,NONE,"LDP x29,x30,[sp],#[0]")       \
+ DEF(ASM_BNZ,REG,STRING,NONE,"CMP xzr, [0]\nBNE [1]")         \
  DEF(ASM_RET,NONE,NONE,NONE,"RET")     \
- DEF(ASM_MOV,REG,REG_OR_IMM,NONE,"MOV [0] [1]")\
- DEF(ASM_ADD,REG,REG,REG_OR_IMM,"ADD [0] [1] [2]")  \
- DEF(ASM_SUB,REG,REG,REG_OR_IMM,"SUB [0] [1] [2]")  \
- DEF(ASM_MUL,REG,REG,REG_OR_IMM,"MUL [0] [1] [2]")\
- DEF(ASM_DIV,REG,REG,REG_OR_IMM,"DIV [0] [1] [2]")\
- DEF(ASM_EQ,REG,REG,REG_OR_IMM,"EQ [0] [1] [2]")    \
- DEF(ASM_NE,REG,REG,REG_OR_IMM,"NE [0] [1] [2]")    \
- DEF(ASM_LT,REG,REG,REG_OR_IMM,"LT [0] [1] [2]")    \
- DEF(ASM_LE,REG,REG,REG_OR_IMM,"LE [0] [1] [2]")    \
- DEF(ASM_GT,REG,REG,REG_OR_IMM,"GT [0] [1] [2]")\
- DEF(ASM_GE,REG,REG,REG_OR_IMM,"GE [0] [1] [2]")    \
- DEF(ASM_NEG,REG,REG_OR_IMM,NONE,"NEG [0] [1]")    \
- DEF(ASM_CLEAR,NONE,NONE,NONE,"CLEAR") \
- DEF(ASM_LOCATE,REG,REG,IMM,"LOCATE [0] [1] -> [2]")\
-DEF(ASM_SWAPRM,REG,REG,IMM,"SWAP [0],[0],[[1],[2]]")
-inline string Get_FP_REG_NAME() {
-    return "x29";
-}
+ DEF(ASM_MOV,REG,REG_OR_IMM,NONE,"MOV [0], [1]")\
+ DEF(ASM_ADD,REG,REG,REG_OR_IMM,"ADD [0], [1], [2]")  \
+ DEF(ASM_SUB,REG,REG,REG_OR_IMM,"SUB [0] ,[1], [2]")  \
+ DEF(ASM_MUL,REG,REG,REG_OR_IMM,"MUL [0], [1], [2]")\
+ DEF(ASM_DIV,REG,REG,REG_OR_IMM,"DIV [0], [1], [2]")\
+ DEF(ASM_EQ,REG,REG,REG_OR_IMM,"EQ [0], [1], [2]")    \
+ DEF(ASM_NE,REG,REG,REG_OR_IMM,"NE [0], [1], [2]")    \
+ DEF(ASM_LT,REG,REG,REG_OR_IMM,"LT [0], [1], [2]")    \
+ DEF(ASM_LE,REG,REG,REG_OR_IMM,"LE [0], [1], [2]")    \
+ DEF(ASM_GT,REG,REG,REG_OR_IMM,"GT [0], [1], [2]")\
+ DEF(ASM_GE,REG,REG,REG_OR_IMM,"GE [0], [1], [2]")    \
+ DEF(ASM_NEG,REG,REG_OR_IMM,NONE,"NEG [0], [1]")
+//DEF(ASM_SWAPRM,REG,REG,IMM,"SWAP [0],[0],[[1],[2]]")
+
 
 inline string Get_SP_REG_NAME() {
     return "sp";

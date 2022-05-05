@@ -18,8 +18,8 @@ const std::string BIND_FUNC = "__LIGHTC_BIND";
 const std::string BEFORE_CALL_FUNC = "__LIGHTC_BEFORE_CALL";
 const std::string RET_FUNC = "__LIGHTC_RET";
 
-const std::string ASM_SOURCE_NAME = ".LIGHTC_ASM.s";
-const std::string BUILTIN_SOURCE_NAME = ".LIGHTC_BUILTIN.cpp";
+const std::string ASM_SOURCE_NAME = "./output/LIGHTC_ASM.s";
+const std::string BUILTIN_SOURCE_NAME = "./output/LIGHTC_BUILTIN.cpp";
 
 const std::string MAIN_CLASS_NAME ="main";
 

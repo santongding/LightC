@@ -93,6 +93,7 @@ private:
 
 class ClassInfo {
 public:
+    ClassInfo()=default;
     ClassInfo(const int name);
 
     ClassInfo(vector<pair<int, TypeInfo>> types) {

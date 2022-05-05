@@ -194,9 +194,10 @@ void TypeManager::CastType(SYM *from, const TypeInfo &t) {
 }
 
 string TypeManager::Dump() {
-    std::stringstream stringstream("std::map<int, ClassInfo> classes = {");
+    std::stringstream stringstream;
+    stringstream<<"std::map<int, ClassInfo> classes = {\n";
     for (auto &c: classes) {
-        stringstream << "{" << c.first << "," << c.second->Dump() << "},";
+        stringstream << "\t{" << c.first << "," << c.second->Dump() << "},\n";
     }
     stringstream << "};\n";
     if(classes.find( idMap.itn(MAIN_CLASS_NAME))==classes.end()){

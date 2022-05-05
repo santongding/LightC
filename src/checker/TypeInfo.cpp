@@ -122,22 +122,25 @@ FuncInfo ClassInfo::GetFunc(int id) {
 }
 
 string ClassInfo::Dump() const {
-    std::stringstream stringstream("{");
+    std::stringstream stringstream;
+    stringstream << "ClassInfo(vector<pair<int,TypeInfo>>{";
     for (auto &t: membersType) {
         stringstream << "{" << t.first << "," << t.second.Dump() << "},";
     }
-    stringstream << "}";
+    stringstream << "})";
     return stringstream.str();
 
 }
 
 string TypeInfo::Dump() const {
-    std::stringstream stringstream("{");
+    std::stringstream stringstream;
+    stringstream << "{";
     if (type == INT_V) {
-        stringstream << INT_V;
+        stringstream << "INT_V";
     } else {
         assert(type == REF_V || type == LINK_V);
-        stringstream << type << "," << type_name;
+        auto t =type==REF_V?"REF_V":"LINK_V";
+        stringstream << t << "," << type_name;
     }
     stringstream << "}";
     return stringstream.str();

@@ -144,17 +144,17 @@ declare_statement:identifier ':' var_type';'{
 
 while_statement : WHILE '(' expression ')' block
 {
-	$$=do_while($3, $5);
+	$$=do_while(flush_exp($3), $5);
 }
 ;
 
 if_statement : IF '(' expression ')' block
 {
-	$$=do_test($3, $5,NULL);
+	$$=do_test(flush_exp($3), $5,NULL);
 }
 | IF '(' expression ')' block ELSE block
 {
-	$$=do_test($3, $5, $7);
+	$$=do_test(flush_exp($3), $5, $7);
 }
 ;
 

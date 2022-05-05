@@ -2,9 +2,14 @@
 // Created by os on 5/5/22.
 //
 #define IS_BUILTIN
-#include "TypeInfo.hpp"
+
 #include "cppbuiltin.h"
 #include "map"
+#include "cassert"
+
+using std::pair;
+using std::string;
+using std::vector;
 
 enum ERROR {
     OK_R = 0,
@@ -20,6 +25,7 @@ vector<vtype> object_stk;
 
 class obj {
 public:
+    obj()=default;
     obj(int t) : classInfo(&classes[t]), ref(1) {
         values = vector<vtype>(classInfo->GetMemNum(), 0);
     }
@@ -107,9 +113,9 @@ ClassInfo &getClass(vtype tid) {
     return classes[tid];
 }
 
-extern vtype __LIGHTC_FUNC_main_main(vtype t);
+extern "C" vtype __LIGHTC_FUNC_main_main(vtype t);
 
-vtype __LIGHTC_LOCATE(vtype oid, vtype mid) {
+extern "C" vtype __LIGHTC_LOCATE(vtype oid, vtype mid) {
     auto o = getObj(oid);
     auto t = o->getValueType(mid);
     auto v = o->getValue(mid);
@@ -122,14 +128,14 @@ vtype __LIGHTC_LOCATE(vtype oid, vtype mid) {
     return v;
 }
 
-vtype __LIGHTC_NEW(vtype tid) {
+extern "C" vtype __LIGHTC_NEW(vtype tid) {
     obj_pool[++cur_obj_num] = obj(tid);
     object_stk.push_back(cur_obj_num);
     return cur_obj_num;
 }
 
 
-void __LIGHTC_BIND(vtype v, vtype oid, vtype mid) {
+extern "C" void __LIGHTC_BIND(vtype v, vtype oid, vtype mid) {
     auto o = getObj(oid);
     auto old_v = o->getValue(mid);
     auto t = o->getValueType(mid);
@@ -142,11 +148,11 @@ void __LIGHTC_BIND(vtype v, vtype oid, vtype mid) {
     o->setValue(mid, v);
 }
 
-void __LIGHTC_BEFORE_CALL() {
+extern "C" void __LIGHTC_BEFORE_CALL() {
     object_stk.push_back(0);
 }
 
-void __LIGHTC_RET(int v, bool isRefRet) {
+extern "C" void __LIGHTC_RET(vtype v, bool isRefRet) {
 
     if (isRefRet) {
         getObj(v)->addRef();
@@ -166,8 +172,9 @@ extern vtype main_obj_tid;
 int main() {
     object_stk.push_back(0);
     auto m = __LIGHTC_NEW(main_obj_tid);
-    __LIGHTC_RET(0, false);
     auto code = __LIGHTC_FUNC_main_main(m);
+
+    __LIGHTC_RET(0, false);
 
     if (obj_pool.size() != 0) {
         exit(GARBAGE_EXISTS);

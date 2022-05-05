@@ -27,7 +27,7 @@ public:
     varInfo() = default;
 
     varInfo(VarPos p, AsmOpValue v, bool b, int i, int stk) : pos(p), value(v), needWriteBack(b), lstTs(i),
-                                                              stkPos({stk * INSTRUCTION_WIDTH}) {
+                                                              stkPos({(stk + 2) * INSTRUCTION_WIDTH}) {
 
     }
 
@@ -69,7 +69,7 @@ public:
     void releaseCallee() {
         assert(pos == CALLEE);
         assert(value.type == CalleeSaved);
-        append({{ASM_LOAD, value, {FP}, stkPos}});
+        append({{ASM_LOAD, value, {SP}, stkPos}});
     }
 
     void persist(RegManager *ctx) {
@@ -82,12 +82,12 @@ public:
         }
         switch (pos) {
             case CALLER: {
-                append({ASM_STORE, value, {FP}, stkPos});
+                append({ASM_STORE, value, {SP}, stkPos});
             }
                 break;
             case CALLEE: {
-
-                append({ASM_SWAPRM, value, {FP}, stkPos});
+                assert(false);
+                //append({ASM_SWAPRM, value, {FP}, stkPos});
             }
                 break;
             default:
@@ -106,13 +106,13 @@ public:
         assert(pos == STK || pos == ORIGIN);
 
         switch (reg.type) {
-            case CalleeSaved:
-                if (pos == STK) {
-                    append({ASM_SWAPRM, reg, {FP}, stkPos});
-                } else {
-                    append({{ASM_STORE, reg, {FP}, stkPos},
-                            {ASM_MOV,   reg, 0}});
-                }
+            case CalleeSaved: {
+
+                assert(pos == ORIGIN);
+                append({{ASM_STORE, reg, {SP}, stkPos},
+                        {ASM_MOV,   reg, 0}});
+
+            }
                 break;
 
             case CallerSaved:
@@ -120,7 +120,7 @@ public:
                     append({ASM_MOV, reg, 0});
                 } else {
                     assert(pos != ORIGIN);
-                    append({ASM_LOAD, reg, {FP}, stkPos});
+                    append({ASM_LOAD, reg, {SP}, stkPos});
                 }
                 break;
             default:

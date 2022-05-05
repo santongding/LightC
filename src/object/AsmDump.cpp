@@ -8,7 +8,6 @@
 auto arg_regs_num = Args_Reg_Num;
 auto callee_regs = Get_Callee_REG_NAME();
 auto caller_regs = Get_Caller_REG_NAME();
-auto fp_name = Get_FP_REG_NAME();
 auto ra_name =Get_RA_REG_NAME();
 auto sp_name = Get_SP_REG_NAME();
 auto z_name = Get_ZERO_REG_NAME();
@@ -55,13 +54,6 @@ string AsmOpValue::Dump(AsmValueType target) {
             assert(target == REG||target==REG_OR_IMM);
             assert(value == 0);
             return z_name;
-        }
-            break;
-        case FP:{
-
-            assert(target == REG||target==REG_OR_IMM);
-            assert(value == 0);
-            return fp_name;
         }
             break;
         case CallerSaved:{

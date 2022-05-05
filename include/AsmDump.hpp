@@ -17,7 +17,6 @@ using std::string;
 enum AsmOpValueType {
     None = 0,
     Imm,
-    FP,
     SP,
     RA,
     Zero,
@@ -31,7 +30,7 @@ public:
     AsmOpValue() : type(None), value(0) {}
 
     AsmOpValue(AsmOpValueType t) : type(t), value(0) {
-        assert(t == FP || t == SP || t == RA || t == Zero);
+        assert(t == SP || t == RA || t == Zero);
     }
 
     AsmOpValue(AsmOpValueType t, int v) : type(t), value(v) {

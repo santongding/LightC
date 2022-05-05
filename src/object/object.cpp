@@ -57,10 +57,7 @@ void begin_func(const TAC *tac) {
             pageVarSum++;
         }
     }
-    append({{ASM_PUSH, {RA}},
-            {ASM_PUSH, {FP}},
-            {ASM_MOV,  {FP}, {SP}},
-            {ASM_SUB,  {SP}, {SP}, {-pageVarSum * INSTRUCTION_WIDTH}}
+    append({{ASM_RESTORE, {-(pageVarSum + 2) * INSTRUCTION_WIDTH}}
            });
 
     int cnt = 0;
@@ -90,8 +87,9 @@ void func_call_builtin(const string &func, vector<SYM *> syms, SYM *ret) {
         append({ASM_MOV, r, {CallerSaved, 0}});
     }
 }
+
 void func_call(const TAC *tac) {
-    func_call_builtin(BEFORE_CALL_FUNC,{}, nullptr);
+    func_call_builtin(BEFORE_CALL_FUNC, {}, nullptr);
 
     regManager.saveCaller();
     vector<SYM *> actuals;
@@ -110,14 +108,11 @@ void func_call(const TAC *tac) {
 
 
 void func_ret(const TAC *tac) {
-    func_call_builtin(RET_FUNC, {tac->a,tac->b}, nullptr);
+    func_call_builtin(RET_FUNC, {tac->a, tac->b}, nullptr);
     regManager.ret(tac->a);
-    append({ASM_ADD, {SP}, {SP}, {pageVarSum * INSTRUCTION_WIDTH}});
-    append({ASM_POPR, {FP}});
-
     assert(tac->b->IsConst());
+    append({ASM_RESTORE, {(pageVarSum + 2) * INSTRUCTION_WIDTH}});
 
-    append({ASM_POPR, {RA}});
 
     append(AsmCode(ASM_RET));
 }
@@ -228,6 +223,7 @@ void tac_object_generate(TAC *tac) {
 
     auto asm_out =
             fopen(ASM_SOURCE_NAME.c_str(), "w");
+    fprintf(asm_out, ".text\n.globl %s\n", (MEM_FUNC_PREFIX + MAIN_CLASS_NAME + "_" + MAIN_CLASS_NAME).c_str());
     for (const TAC *now = tac; now; now = now->next) {
         if (now->linenum > 0) {
             setlineno(now->linenum);
@@ -238,8 +234,8 @@ void tac_object_generate(TAC *tac) {
         puts("");
         auto asms = object_generate(now);
         for (auto &c: asms) {
-            printf("\t%s;\n", c.Dump().c_str());
-            fprintf(asm_out, "%s;\n", c.Dump().c_str());
+            printf("\t%s\n", c.Dump().c_str());
+            fprintf(asm_out, "%s\n", c.Dump().c_str());
         }
 
     }

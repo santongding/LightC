@@ -1394,7 +1394,7 @@ yyreduce:
   case 33: /* while_statement: WHILE '(' expression ')' block  */
 #line 146 "LightC.y"
 {
-	(yyval.tac)=do_while((yyvsp[-2].exp), (yyvsp[0].tac));
+	(yyval.tac)=do_while(flush_exp((yyvsp[-2].exp)), (yyvsp[0].tac));
 }
 #line 1400 "bison.cpp"
     break;
@@ -1402,7 +1402,7 @@ yyreduce:
   case 34: /* if_statement: IF '(' expression ')' block  */
 #line 152 "LightC.y"
 {
-	(yyval.tac)=do_test((yyvsp[-2].exp), (yyvsp[0].tac),NULL);
+	(yyval.tac)=do_test(flush_exp((yyvsp[-2].exp)), (yyvsp[0].tac),NULL);
 }
 #line 1408 "bison.cpp"
     break;
@@ -1410,7 +1410,7 @@ yyreduce:
   case 35: /* if_statement: IF '(' expression ')' block ELSE block  */
 #line 156 "LightC.y"
 {
-	(yyval.tac)=do_test((yyvsp[-4].exp), (yyvsp[-2].tac), (yyvsp[0].tac));
+	(yyval.tac)=do_test(flush_exp((yyvsp[-4].exp)), (yyvsp[-2].tac), (yyvsp[0].tac));
 }
 #line 1416 "bison.cpp"
     break;

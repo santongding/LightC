@@ -61,7 +61,7 @@ public:
 
     }
 
-    void loadArgs(const vector<SYM *> args,int reserveArgsNum=0) {
+    void loadArgs(const vector<SYM *> args, int reserveArgsNum = 0) {
         int cnt = reserveArgsNum;
         for (auto &x: args) {
             if (x->IsConst()) {
@@ -71,7 +71,7 @@ public:
                 auto name = x->ToStr();
                 assert(exist(name));
                 if (vars[name].inStk()) {
-                    append({ASM_LOAD, {CallerSaved, cnt++}, {FP}, {vars[name].getStkOffset()}});
+                    append({ASM_LOAD, {CallerSaved, cnt++}, {SP}, {vars[name].getStkOffset()}});
                 } else {
                     auto r = vars[name].getReg(clock, false);
 
@@ -119,7 +119,7 @@ private:
         assert(exist(name));
         auto &info = vars[name];
         if ((info.isOrigin() && isAssign) || info.inStk()) {
-            auto ans = emptyReg(name);
+            auto ans = emptyReg(name, info.isOrigin());
             info.toReg(ans, this);
             return info.getReg(clock, isAssign);
         } else {
@@ -127,10 +127,10 @@ private:
         }
     }
 
-    AsmOpValue emptyReg(const string &name) {
+    AsmOpValue emptyReg(const string &name, bool isOrigin) {
         bool isTemp = 0 == name.compare(0, TEMP_VALUE_PREFIX.length(), TEMP_VALUE_PREFIX);
 
-        if (!isTemp) {
+        if ((!isTemp) && isOrigin) {
             for (int i = 0; i < callee_vars.size(); i++) {
                 if (callee_vars[i].empty()) {
                     callee_vars[i] = name;
