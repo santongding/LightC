@@ -128,11 +128,11 @@ void CheckTac(const TAC *tac) {
                 CheckStatus(typeManager.TryDecodeType(now->a->ToStr(), ti));
                 sym_tables.back().insert({name, now->a});
 
-                if(now->op==TAC_NEW){
+                if (now->op == TAC_NEW) {
                     auto s = now->a->ToStr();
                     auto pos = s.find_first_of("|");
-                    s = s.substr(pos+1);
-                    now->a=new SYM(SYM_CONST,typeManager.Str2ID(s));
+                    s = s.substr(pos + 1);
+                    now->a = new SYM(SYM_CONST, typeManager.Str2ID(s));
                 }
 
             }
@@ -177,13 +177,13 @@ void CheckTac(const TAC *tac) {
                 }
                 typeManager.CheckTac(get_type_sym(now->a), get_type_sym(now->b), const_cast<TAC *>(now), get_type_sym);
 
-                if(now->op==TAC_CALL){// set to func name
+                if (now->op == TAC_CALL) {// set to func name
                     auto s = get_type_sym(now->b)->ToStr();
                     auto pos = s.find_first_of("|");
-                    s = s.substr(pos+1);
-                    now->b = new SYM(SYM_SYMBOL,s);
-                }else {
-                    now->c=new SYM(SYM_CONST,typeManager.Str2ID(now->c->ToStr()));
+                    s = s.substr(pos + 1);
+                    now->b = new SYM(SYM_SYMBOL, s);
+                } else {
+                    now->c = new SYM(SYM_CONST, typeManager.Str2ID(now->c->ToStr()));
                 }
             }
                 break;
@@ -216,6 +216,11 @@ void CheckTac(const TAC *tac) {
                 auto type = get_type_sym(now->a);
                 typeManager.CastType(type, curRetType);
                 lstRetScope = scope;
+                if (curRetType.Is<INT_V>()) {
+                    now->b = new SYM(SYM_CONST, 0);
+                } else {
+                    now->b = new SYM(SYM_CONST, 1);
+                }
             }
                 break;
             case TAC_ACTUAL:

@@ -84,7 +84,6 @@ ClassInfo::ClassInfo(const int name) {
 
 STATUS ClassInfo::DeclareMember(const int name, const TypeInfo &type) {
     if (membersType.find(name) == membersType.end() && funcs.find(name) == funcs.end()) {
-        membersOrder.push_back(name);
         membersType[name] = type;
         return OK;
     } else {
@@ -95,6 +94,7 @@ STATUS ClassInfo::DeclareMember(const int name, const TypeInfo &type) {
 
 STATUS ClassInfo::DeclareFunc(const int name, TypeInfo ret, vector<pair<TypeInfo, int>> ts) {
     assert(ts.size() >= 1);
+    order.push_back(name);
     if (membersType.find(name) == membersType.end() && funcs.find(name) == funcs.end()) {
         funcs[name] = FuncInfo(ret, vector<pair<TypeInfo, int>>(ts.begin(), ts.end()));
         return OK;
@@ -106,9 +106,8 @@ STATUS ClassInfo::DeclareFunc(const int name, TypeInfo ret, vector<pair<TypeInfo
 string ClassInfo::Format(IdentifierMap *idMap) {
     std::stringstream stringstream;
     stringstream << idMap->nti(className) << "<" << className << ">:\n";
-    for (auto &i: membersOrder) {
-        auto x = membersType.find(i);
-        stringstream << "\t" << idMap->nti(x->first) << "<" << x->first << ">: " << x->second.Format(idMap) << "\n";
+    for (auto &x: membersType) {
+        stringstream << "\t" << idMap->nti(x.first) << "<" << x.first << ">: " << x.second.Format(idMap) << "\n";
     }
     for (auto &x: funcs) {
 

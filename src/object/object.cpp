@@ -77,16 +77,30 @@ void declare_op(const TAC *tac) {
     return regManager.declare(tac->b->ToStr());
 }
 
-void func_call(const TAC *tac) {
-    regManager.saveCaller();
 
+void func_call_builtin(const string &func, vector<SYM *> syms, SYM *ret) {
+    regManager.saveCaller();
+    regManager.loadArgs(syms);
+
+    append({ASM_JR, func});
+    if (ret != nullptr) {
+
+        auto r = regManager.GetAssignValue(ret);
+
+        append({ASM_MOV, r, {CallerSaved, 0}});
+    }
+}
+void func_call(const TAC *tac) {
+    func_call_builtin(BEFORE_CALL_FUNC,{}, nullptr);
+
+    regManager.saveCaller();
     vector<SYM *> actuals;
     for (auto x = tac->prev; x->op == TAC_ACTUAL; x = x->prev) {
         actuals.push_back(x->a);
     }
     std::reverse(actuals.begin(), actuals.end());
     assert(actuals.size());
-    regManager.loadArgs(actuals);
+    regManager.loadArgs(actuals, 0);
     append({ASM_JR, {MEM_FUNC_PREFIX + tac->b->ToStr() + "_" + tac->c->ToStr()}});
     auto r = regManager.GetAssignValue(tac->a);
 
@@ -96,39 +110,31 @@ void func_call(const TAC *tac) {
 
 
 void func_ret(const TAC *tac) {
+    func_call_builtin(RET_FUNC, {tac->a,tac->b}, nullptr);
     regManager.ret(tac->a);
     append({ASM_ADD, {SP}, {SP}, {pageVarSum * INSTRUCTION_WIDTH}});
     append({ASM_POPR, {FP}});
+
+    assert(tac->b->IsConst());
+
     append({ASM_POPR, {RA}});
 
     append(AsmCode(ASM_RET));
 }
 
+
 void func_locate(const TAC *tac) {
-    regManager.saveCaller();
-    regManager.loadArgs({tac->b, tac->c});
-    append({ASM_JR, LOCATE_FUNC});
-
-    auto r = regManager.GetAssignValue(tac->a);
-
-    append({ASM_MOV, r, {CallerSaved, 0}});
+    func_call_builtin(LOCATE_FUNC, {tac->b, tac->c}, tac->a);
 }
 
 void func_bind(const TAC *tac) {
-    regManager.saveCaller();
-    regManager.loadArgs({tac->a, tac->b, tac->c});
-    append({ASM_JR, BIND_FUNC});
+    func_call_builtin(BIND_FUNC, {tac->a, tac->b, tac->c}, nullptr);
 }
 
 void func_new(const TAC *tac) {
-    declare_op(tac);
-    regManager.saveCaller();
-    regManager.loadArgs({tac->a, tac->b});
-    append({ASM_JR, NEW_FUNC});
 
-    auto r = regManager.GetAssignValue(tac->b);
-
-    append({ASM_MOV, r, {CallerSaved, 0}});
+    regManager.declare(tac->b->ToStr());
+    func_call_builtin(NEW_FUNC, {tac->a}, tac->b);
 }
 
 vector<AsmCode> object_generate(const TAC *tac) {

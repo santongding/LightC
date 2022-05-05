@@ -61,8 +61,8 @@ public:
 
     }
 
-    void loadArgs(const vector<SYM *> args) {
-        int cnt = 0;
+    void loadArgs(const vector<SYM *> args,int reserveArgsNum=0) {
+        int cnt = reserveArgsNum;
         for (auto &x: args) {
             if (x->IsConst()) {
                 append({ASM_MOV, {CallerSaved, cnt++}, x->GetValue()});

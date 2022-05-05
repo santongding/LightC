@@ -141,9 +141,17 @@ public:
         }
     }
 
+    int GetMemNum(){
+        return membersType.size();
+    }
+
+    int order2nid(int order){
+
+    }
+
 
 private:
-    vector<int> membersOrder;
+    vector<int>order;
     std::unordered_map<int, TypeInfo> membersType;
     std::unordered_map<int, FuncInfo> funcs;
     int className;

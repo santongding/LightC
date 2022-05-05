@@ -5,15 +5,18 @@
 #ifndef LIGHTC_DEF_H
 #define LIGHTC_DEF_H
 
-
-const std::string TEMP_VALUE_PREFIX="#t";
-const std::string MEM_FUNC_PREFIX="__LIGHTC_FUNC_";
+typedef int64_t vtype;
+const std::string TEMP_VALUE_PREFIX = "#t";
+const std::string MEM_FUNC_PREFIX = "__LIGHTC_FUNC_";
 const std::string LOCATE_FUNC = "__LIGHTC_LOCATE";
 
 const std::string NEW_FUNC = "__LIGHTC_NEW";
 const std::string BIND_FUNC = "__LIGHTC_BIND";
 
-const std::string ASM_SOURCE_NAME =".LIGHTC_ASM.s";
+const std::string BEFORE_CALL_FUNC = "__LIGHTC_BEFORE_CALL";
+const std::string RET_FUNC = "__LIGHTC_RET";
+
+const std::string ASM_SOURCE_NAME = ".LIGHTC_ASM.s";
 
 enum VALUE_TYPE {
     INVALID_V = 0,
