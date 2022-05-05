@@ -172,7 +172,7 @@ RETURN expression ';'{
 
 expression_statement : expression_list ';'
 {
-	auto tp =do_exp_list($1);
+	auto tp =do_exp_list($1,false);
 	if(tp)
 	$$ = tp->tac;
 	else $$ = NULL;
@@ -183,17 +183,20 @@ expression_list : {
 	$$=NULL;
 }
 | expression{
-	$$=flush_exp($1);
+	$$=$1;
 }
 |  expression_list ',' expression
 {
-	$$=join_exp($1,flush_exp($3));
+	$$=join_exp($1,$3);
 }
 ;
 
-expression : expression '=' expression {
-	$$=do_assign($1,flush_exp($3));
+expression : identifier '=' expression {
+	$$=do_assign(mk_exp(NULL,$1,NULL),flush_exp($3));
 }
+|expression '.' identifier '=' expression {
+ 	$$=do_assign(do_locate(flush_exp($1),$3),flush_exp($5));
+ }
 | expression '.' identifier{
 	$$=do_locate(flush_exp($1),$3);
 }
@@ -243,7 +246,7 @@ expression : expression '=' expression {
 }
 | '(' expression_list ')'
 {
-	$$=do_exp_list($2);
+	$$=do_exp_list($2,false);
 }
 | INTEGER
 {

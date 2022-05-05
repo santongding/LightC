@@ -1,0 +1,8 @@
+class a{
+    y:int;
+    a f(i:a,j:int){
+        this.y;
+        this.f(this,this.y);
+        return this;
+    }
+}

@@ -9,9 +9,6 @@
 #include "tac_def.h"
 
 
-
-
-
 typedef struct exp /* Parser expression */
 {
     struct exp *next; /* For argument lists */
@@ -56,7 +53,7 @@ EXP *do_locate(EXP *x, SYM *y);
 
 EXP *do_call_ret(EXP *obj, SYM *func, EXP *arglist);
 
-EXP *do_exp_list(EXP *exps);
+EXP *do_exp_list(EXP *exps, bool needFlush);
 
 EXP *join_exp(EXP *x, EXP *y);
 
@@ -77,7 +74,6 @@ TAC *declare_new(SYM *type, SYM *name);
 TAC *mk_func(SYM *type, SYM *name, TAC *tac, TAC *block);
 
 TAC *mk_class(SYM *name, TAC *tac);
-
 
 
 #endif //LIGHTC_TAC_HPP

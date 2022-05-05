@@ -173,10 +173,12 @@ EXP *do_locate(EXP *x, SYM *y) {
     return x;
 }
 
-EXP *do_exp_list(EXP *exps) {
+EXP *do_exp_list(EXP *exps, bool needFlush) {
     TAC *code = nullptr;
     EXP *ret = exps;
     while (exps != nullptr) {
+        if (needFlush)
+            exps = flush_exp(exps);
         ret->ret = exps->ret;
         code = join_tac(code, exps->tac);
         exps = exps->next;
@@ -205,11 +207,11 @@ EXP *do_call_ret(EXP *obj, SYM *func, EXP *arglist) {
     }
     code = join_tac(mk_tac(TAC_ACTUAL, obj->ret, NULL, NULL, false), code);
 
-    EXP *exps = do_exp_list(lis);
+    EXP *exps = do_exp_list(lis, true);
     temp = join_tac(exps ? exps->tac : nullptr, code);
     ret = new SYM(SYM_SYMBOL, mk_tmp()); /* For the result */
     code = mk_tac(TAC_DECLARE, new SYM(SYM_TYPE, "any|"), ret, NULL);
-    code = join_tac(code,temp);
+    code = join_tac(code, temp);
     temp = mk_tac(TAC_CALL, ret, obj->ret, func);
 
     temp->prev = code;

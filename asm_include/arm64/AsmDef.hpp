@@ -53,7 +53,7 @@ inline string Get_RA_REG_NAME() {
 }
 
 inline string Get_ZERO_REG_NAME() {
-    return "zrp";
+    return "xzr";
 }
 
 

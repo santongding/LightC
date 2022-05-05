@@ -83,7 +83,7 @@ void func_call(const TAC *tac) {
     std::reverse(actuals.begin(), actuals.end());
     assert(actuals.size());
     regManager.loadArgs(actuals);
-    append({ASM_JR, {MEM_FUNC_PREFIX + "_" + tac->b->ToStr() + tac->c->ToStr()}});
+    append({ASM_JR, {MEM_FUNC_PREFIX + tac->b->ToStr() + "_" + tac->c->ToStr()}});
     auto r = regManager.GetOpValue(tac->a);
 
     append({ASM_MOV, r, {CallerSaved, 0}});
@@ -102,7 +102,7 @@ void func_ret(const TAC *tac) {
 
 void func_locate(const TAC *tac) {
     regManager.saveCaller();
-    regManager.loadArgs({tac->b, tac->a});
+    regManager.loadArgs({ tac->b, tac->c});
     append({ASM_JR, LOCATE_FUNC});
 
     auto r = regManager.GetAssignValue(tac->a);
