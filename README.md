@@ -1,5 +1,5 @@
 # LightC
- ## A sample oop&gc language.
+ A sample oop&gc language.
  ## Support:
  * class definition
  * type coercion
@@ -9,5 +9,5 @@
  ## Should not support:
  * class inherit
  ## Platform
-  Currently aarch64&linux only, could easily extend to other platforms. 
+ * Currently aarch64&linux only, could easily extend to other platforms. 
   
