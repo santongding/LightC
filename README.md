@@ -1,13 +1,13 @@
 # LightC
  A sample oop&gc language.
  ## Support:
- * class definition
- * type coercion
- * garbage collection
- * type cast and polymorphism(not finish yet)
- * circular reference detection(not finish yet)
+ * Class definition
+ * Type coercion
+ * Garbage collection
+ * Type cast and polymorphism(not finish yet)
+ * Circular reference detection(not finish yet)
  ## Should not support:
- * class inherit
+ * Class inherit
  ## Platform
  * Currently aarch64&linux only, could easily extend to other platforms. 
   
