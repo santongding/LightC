@@ -1,9 +1,12 @@
 cmake_minimum_required(VERSION 3.21)
 project(LightC)
 
-include_directories(${PROJECT_SOURCE_DIR}/include)
-include_directories(${PROJECT_SOURCE_DIR}/asm_include/arm64)
-#include_directories(/usr/include)
+set(shared_include_dir  ${PROJECT_SOURCE_DIR}/shared_include)
+set(include_dir ${PROJECT_SOURCE_DIR}/include)
+set(arm64_include_dir ${PROJECT_SOURCE_DIR}/asm_include/arm64)
+include_directories(${include_dir})
+include_directories(${arm64_include_dir})
+include_directories(${shared_include_dir})
 
 add_library(${PROJECT_NAME}_lib STATIC
         src/bison/lex.yy.cc
