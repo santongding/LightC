@@ -24,6 +24,24 @@ enum ERROR {
 extern std::map<int, ClassInfo> classes;
 vector<vtype> object_stk;
 
+void push_obj(vtype obj) {
+#ifdef PRINT_DEBUG
+
+    printf("stk push:%ld\n",obj);
+#endif
+    object_stk.push_back(obj);
+}
+
+vtype pop_obj() {
+    assert(object_stk.empty() == false);
+#ifdef PRINT_DEBUG
+    printf("stk pop:%ld\n",object_stk.back());
+#endif
+    auto ans = object_stk.back();
+    object_stk.pop_back();
+    return ans;
+}
+
 class obj {
 public:
     obj() = default;
@@ -134,10 +152,7 @@ extern "C" vtype __LIGHTC_LOCATE(vtype oid, vtype mid) {
         assert((!v) || getObj(v));
     } else if (t.Is<LINK_V>() && v) {
         getObj(v)->addRef();
-#ifdef PRINT_DEBUG
-        printf("stk push:%ld\n", v);
-#endif
-        object_stk.push_back(v);
+        push_obj(v);
     }
     return v;
 }
@@ -145,10 +160,7 @@ extern "C" vtype __LIGHTC_LOCATE(vtype oid, vtype mid) {
 extern "C" vtype __LIGHTC_NEW(vtype tid) {
     ++cur_obj_num;
     obj_pool[cur_obj_num] = obj(tid, cur_obj_num);
-#ifdef PRINT_DEBUG
-    printf("stk push:%d\n", cur_obj_num);
-#endif
-    object_stk.push_back(cur_obj_num);
+    push_obj(cur_obj_num);
     return cur_obj_num;
 }
 
@@ -167,10 +179,7 @@ extern "C" void __LIGHTC_BIND(vtype v, vtype oid, vtype mid) {
 }
 
 extern "C" void __LIGHTC_BEFORE_CALL() {
-#ifdef PRINT_DEBUG
-    printf("stk push:0\n");
-#endif
-    object_stk.push_back(0);
+    push_obj(0);
 }
 
 extern "C" void __LIGHTC_RET(vtype v, bool isRefRet) {
@@ -180,32 +189,20 @@ extern "C" void __LIGHTC_RET(vtype v, bool isRefRet) {
     }
     assert(object_stk.empty() == false);
     while (object_stk.back()) {
-#ifdef PRINT_DEBUG
-        printf("stk pop:%ld\n", object_stk.back());
-#endif
-        reduceRef(object_stk.back());
-        object_stk.pop_back();
+        reduceRef(pop_obj());
         assert(object_stk.empty() == false);
     }
-    object_stk.pop_back();
-#ifdef PRINT_DEBUG
-    printf("stk pop:0\n");
-#endif
+    pop_obj();
     if (isRefRet) {
-#ifdef PRINT_DEBUG
-        printf("stk push:%ld\n", v);
-#endif
-        object_stk.push_back(v);
+        push_obj(v);
     }
 }
 
 extern vtype main_obj_tid;
 
 int main() {
-#ifdef PRINT_DEBUG
-    printf("stk push:0\n");
-#endif
-    object_stk.push_back(0);
+
+    push_obj(0);
     auto m = __LIGHTC_NEW(main_obj_tid);
     __LIGHTC_BEFORE_CALL();
     auto code = __LIGHTC_FUNC_main_main(m);
